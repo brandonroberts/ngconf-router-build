@@ -129,6 +129,9 @@ var BrowserDomAdapter = (function (_super) {
         return evt.defaultPrevented || lang_1.isPresent(evt.returnValue) && !evt.returnValue;
     };
     BrowserDomAdapter.prototype.getInnerHTML = function (el) { return el.innerHTML; };
+    BrowserDomAdapter.prototype.getTemplateContent = function (el) {
+        return 'content' in el && el instanceof HTMLTemplateElement ? el.content : null;
+    };
     BrowserDomAdapter.prototype.getOuterHTML = function (el) { return el.outerHTML; };
     BrowserDomAdapter.prototype.nodeName = function (node) { return node.nodeName; };
     BrowserDomAdapter.prototype.nodeValue = function (node) { return node.nodeValue; };

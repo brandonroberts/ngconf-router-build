@@ -4,17 +4,18 @@ import { Headers } from '../headers';
 import { ResponseOptions } from '../base_response_options';
 import { Injectable } from '@angular/core';
 import { BrowserXhr } from './browser_xhr';
-import { isPresent } from '../../src/facade/lang';
+import { isPresent, isString } from '../../src/facade/lang';
 import { Observable } from 'rxjs/Observable';
 import { isSuccess, getResponseURL } from '../http_utils';
+const XSSI_PREFIX = ')]}\',\n';
 /**
-* Creates connections using `XMLHttpRequest`. Given a fully-qualified
-* request, an `XHRConnection` will immediately create an `XMLHttpRequest` object and send the
-* request.
-*
-* This class would typically not be created or interacted with directly inside applications, though
-* the {@link MockConnection} may be interacted with in tests.
-*/
+ * Creates connections using `XMLHttpRequest`. Given a fully-qualified
+ * request, an `XHRConnection` will immediately create an `XMLHttpRequest` object and send the
+ * request.
+ *
+ * This class would typically not be created or interacted with directly inside applications, though
+ * the {@link MockConnection} may be interacted with in tests.
+ */
 export class XHRConnection {
     constructor(req, browserXHR, baseResponseOptions) {
         this.request = req;
@@ -27,6 +28,10 @@ export class XHRConnection {
                 // response/responseType properties were introduced in XHR Level2 spec (supported by
                 // IE10)
                 let body = isPresent(_xhr.response) ? _xhr.response : _xhr.responseText;
+                // Implicitly strip a potential XSSI prefix.
+                if (isString(body) && body.startsWith(XSSI_PREFIX)) {
+                    body = body.substring(XSSI_PREFIX.length);
+                }
                 let headers = Headers.fromResponseHeaderString(_xhr.getAllResponseHeaders());
                 let url = getResponseURL(_xhr);
                 // normalize IE9 bug (http://bugs.jquery.com/ticket/1450)
@@ -37,7 +42,8 @@ export class XHRConnection {
                 if (status === 0) {
                     status = body ? 200 : 0;
                 }
-                var responseOptions = new ResponseOptions({ body, status, headers, url });
+                let statusText = _xhr.statusText || 'OK';
+                var responseOptions = new ResponseOptions({ body, status, headers, statusText, url });
                 if (isPresent(baseResponseOptions)) {
                     responseOptions = baseResponseOptions.merge(responseOptions);
                 }

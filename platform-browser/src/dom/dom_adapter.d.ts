@@ -24,10 +24,6 @@ export declare abstract class DomAdapter {
     attrToPropMap: {
         [key: string]: string;
     };
-    /** @internal */
-    _attrToPropMap: {
-        [key: string]: string;
-    };
     abstract parse(templateHtml: string): any;
     abstract query(selector: string): any;
     abstract querySelector(el: any, selector: string): HTMLElement;
@@ -40,6 +36,8 @@ export declare abstract class DomAdapter {
     abstract preventDefault(evt: any): any;
     abstract isPrevented(evt: any): boolean;
     abstract getInnerHTML(el: any): string;
+    /** Returns content if el is a <template> element, null otherwise. */
+    abstract getTemplateContent(el: any): any;
     abstract getOuterHTML(el: any): string;
     abstract nodeName(node: any): string;
     abstract nodeValue(node: any): string;

@@ -1,6 +1,6 @@
 import { provide, ApplicationRef, ComponentResolver, NgZone, ReflectiveInjector, Testability } from '@angular/core';
-import { BROWSER_APP_DYNAMIC_PROVIDERS } from '@angular/platform-browser-dynamic';
 import { browserPlatform } from '@angular/platform-browser';
+import { BROWSER_APP_PROVIDERS } from '@angular/platform-browser';
 import { getComponentInfo } from './metadata';
 import { onError, controllerKey } from './util';
 import { NG1_COMPILE, NG1_INJECTOR, NG1_PARSE, NG1_ROOT_SCOPE, NG1_TESTABILITY, NG2_COMPILER, NG2_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG2_ZONE, REQUIRE_INJECTOR } from './constants';
@@ -266,7 +266,7 @@ export class UpgradeAdapter {
         var ng1Injector = null;
         var platformRef = browserPlatform();
         var applicationRef = ReflectiveInjector.resolveAndCreate([
-            BROWSER_APP_DYNAMIC_PROVIDERS,
+            BROWSER_APP_PROVIDERS,
             provide(NG1_INJECTOR, { useFactory: () => ng1Injector }),
             provide(NG1_COMPILE, { useFactory: () => ng1Injector.get(NG1_COMPILE) }),
             this.providers
@@ -495,8 +495,8 @@ export class UpgradeAdapter {
     }
 }
 function ng1ComponentDirective(info, idPrefix) {
-    directiveFactory.$inject = [NG2_COMPONENT_FACTORY_REF_MAP, NG1_PARSE];
-    function directiveFactory(componentFactoryRefMap, parse) {
+    directiveFactory.$inject = [NG1_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG1_PARSE];
+    function directiveFactory(ng1Injector, componentFactoryRefMap, parse) {
         var componentFactory = componentFactoryRefMap[info.selector];
         if (!componentFactory)
             throw new Error('Expecting ComponentFactory for: ' + info.selector);
@@ -507,6 +507,9 @@ function ng1ComponentDirective(info, idPrefix) {
             link: {
                 post: (scope, element, attrs, parentInjector, transclude) => {
                     var domElement = element[0];
+                    if (parentInjector === null) {
+                        parentInjector = ng1Injector.get(NG2_INJECTOR);
+                    }
                     var facade = new DowngradeNg2ComponentAdapter(idPrefix + (idCount++), info, element, attrs, scope, parentInjector, parse, componentFactory);
                     facade.setupInputs();
                     facade.bootstrapNg2();

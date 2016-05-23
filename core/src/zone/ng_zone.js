@@ -76,10 +76,6 @@ exports.NgZoneError = ng_zone_impl_2.NgZoneError;
  * ```
  */
 var NgZone = (function () {
-    /**
-     * @param {bool} enableLongStackTrace whether to enable long stack trace. They should only be
-     *               enabled in development mode as they significantly impact perf.
-     */
     function NgZone(_a) {
         var _this = this;
         var _b = _a.enableLongStackTrace, enableLongStackTrace = _b === void 0 ? false : _b;
@@ -189,6 +185,14 @@ var NgZone = (function () {
          * Notify that an error has been delivered.
          */
         get: function () { return this._onErrorEvents; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(NgZone.prototype, "isStable", {
+        /**
+         * Whether there are no outstanding microtasks or microtasks.
+         */
+        get: function () { return this._isStable; },
         enumerable: true,
         configurable: true
     });

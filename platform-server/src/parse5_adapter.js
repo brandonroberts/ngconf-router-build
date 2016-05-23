@@ -168,6 +168,9 @@ var Parse5DomAdapter = (function (_super) {
     Parse5DomAdapter.prototype.preventDefault = function (evt) { evt.returnValue = false; };
     Parse5DomAdapter.prototype.isPrevented = function (evt) { return lang_1.isPresent(evt.returnValue) && !evt.returnValue; };
     Parse5DomAdapter.prototype.getInnerHTML = function (el) { return serializer.serialize(this.templateAwareRoot(el)); };
+    Parse5DomAdapter.prototype.getTemplateContent = function (el) {
+        return null; // no <template> support in parse5.
+    };
     Parse5DomAdapter.prototype.getOuterHTML = function (el) {
         serializer.html = '';
         serializer._serializeElement(el);

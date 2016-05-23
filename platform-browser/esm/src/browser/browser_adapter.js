@@ -115,6 +115,9 @@ export class BrowserDomAdapter extends GenericBrowserDomAdapter {
         return evt.defaultPrevented || isPresent(evt.returnValue) && !evt.returnValue;
     }
     getInnerHTML(el) { return el.innerHTML; }
+    getTemplateContent(el) {
+        return 'content' in el && el instanceof HTMLTemplateElement ? el.content : null;
+    }
     getOuterHTML(el) { return el.outerHTML; }
     nodeName(node) { return node.nodeName; }
     nodeValue(node) { return node.nodeValue; }

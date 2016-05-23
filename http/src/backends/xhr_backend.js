@@ -8,14 +8,15 @@ var browser_xhr_1 = require('./browser_xhr');
 var lang_1 = require('../../src/facade/lang');
 var Observable_1 = require('rxjs/Observable');
 var http_utils_1 = require('../http_utils');
+var XSSI_PREFIX = ')]}\',\n';
 /**
-* Creates connections using `XMLHttpRequest`. Given a fully-qualified
-* request, an `XHRConnection` will immediately create an `XMLHttpRequest` object and send the
-* request.
-*
-* This class would typically not be created or interacted with directly inside applications, though
-* the {@link MockConnection} may be interacted with in tests.
-*/
+ * Creates connections using `XMLHttpRequest`. Given a fully-qualified
+ * request, an `XHRConnection` will immediately create an `XMLHttpRequest` object and send the
+ * request.
+ *
+ * This class would typically not be created or interacted with directly inside applications, though
+ * the {@link MockConnection} may be interacted with in tests.
+ */
 var XHRConnection = (function () {
     function XHRConnection(req, browserXHR, baseResponseOptions) {
         var _this = this;
@@ -29,6 +30,10 @@ var XHRConnection = (function () {
                 // response/responseType properties were introduced in XHR Level2 spec (supported by
                 // IE10)
                 var body = lang_1.isPresent(_xhr.response) ? _xhr.response : _xhr.responseText;
+                // Implicitly strip a potential XSSI prefix.
+                if (lang_1.isString(body) && body.startsWith(XSSI_PREFIX)) {
+                    body = body.substring(XSSI_PREFIX.length);
+                }
                 var headers = headers_1.Headers.fromResponseHeaderString(_xhr.getAllResponseHeaders());
                 var url = http_utils_1.getResponseURL(_xhr);
                 // normalize IE9 bug (http://bugs.jquery.com/ticket/1450)
@@ -39,7 +44,8 @@ var XHRConnection = (function () {
                 if (status === 0) {
                     status = body ? 200 : 0;
                 }
-                var responseOptions = new base_response_options_1.ResponseOptions({ body: body, status: status, headers: headers, url: url });
+                var statusText = _xhr.statusText || 'OK';
+                var responseOptions = new base_response_options_1.ResponseOptions({ body: body, status: status, headers: headers, statusText: statusText, url: url });
                 if (lang_1.isPresent(baseResponseOptions)) {
                     responseOptions = baseResponseOptions.merge(responseOptions);
                 }

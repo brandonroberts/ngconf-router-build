@@ -90,7 +90,6 @@ export declare abstract class DomSanitizationService implements SanitizationServ
 export declare class DomSanitizationServiceImpl extends DomSanitizationService {
     sanitize(ctx: SecurityContext, value: any): string;
     private checkNotSafeValue(value, expectedType);
-    private sanitizeHtml(value);
     bypassSecurityTrustHtml(value: string): SafeHtml;
     bypassSecurityTrustStyle(value: string): SafeStyle;
     bypassSecurityTrustScript(value: string): SafeScript;

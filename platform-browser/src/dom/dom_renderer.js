@@ -305,9 +305,9 @@ function _flattenStyles(compId, styles, target) {
     }
     return target;
 }
-var NS_PREFIX_RE = /^@([^:]+):(.+)/g;
+var NS_PREFIX_RE = /^:([^:]+):(.+)/g;
 function splitNamespace(name) {
-    if (name[0] != '@') {
+    if (name[0] != ':') {
         return [null, name];
     }
     var match = lang_1.RegExpWrapper.firstMatch(NS_PREFIX_RE, name);

@@ -25,6 +25,7 @@ export declare class BrowserDomAdapter extends GenericBrowserDomAdapter {
     preventDefault(evt: Event): void;
     isPrevented(evt: Event): boolean;
     getInnerHTML(el: any): string;
+    getTemplateContent(el: any): Node;
     getOuterHTML(el: any): string;
     nodeName(node: Node): string;
     nodeValue(node: Node): string;

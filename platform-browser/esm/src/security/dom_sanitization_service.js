@@ -1,7 +1,8 @@
+import { Injectable } from '@angular/core';
+import { SecurityContext } from '../../core_private';
+import { sanitizeHtml } from './html_sanitizer';
 import { sanitizeUrl } from './url_sanitizer';
 import { sanitizeStyle } from './style_sanitizer';
-import { SecurityContext } from '../../core_private';
-import { Injectable } from '@angular/core';
 export { SecurityContext };
 /**
  * DomSanitizationService helps preventing Cross Site Scripting Security bugs (XSS) by sanitizing
@@ -40,7 +41,7 @@ export class DomSanitizationServiceImpl extends DomSanitizationService {
                 if (value instanceof SafeHtmlImpl)
                     return value.changingThisBreaksApplicationSecurity;
                 this.checkNotSafeValue(value, 'HTML');
-                return this.sanitizeHtml(String(value));
+                return sanitizeHtml(String(value));
             case SecurityContext.STYLE:
                 if (value instanceof SafeStyleImpl)
                     return value.changingThisBreaksApplicationSecurity;
@@ -70,10 +71,6 @@ export class DomSanitizationServiceImpl extends DomSanitizationService {
         if (value instanceof SafeValueImpl) {
             throw new Error('Required a safe ' + expectedType + ', got a ' + value.getTypeName());
         }
-    }
-    sanitizeHtml(value) {
-        // TODO(martinprobst): implement.
-        return value;
     }
     bypassSecurityTrustHtml(value) { return new SafeHtmlImpl(value); }
     bypassSecurityTrustStyle(value) { return new SafeStyleImpl(value); }
