@@ -1,7 +1,7 @@
 "use strict";
 var core_1 = require('@angular/core');
-var lang_1 = require('../../../src/facade/lang');
-var collection_1 = require('../../../src/facade/collection');
+var lang_1 = require('../../facade/lang');
+var collection_1 = require('../../facade/collection');
 var control_value_accessor_1 = require('./control_value_accessor');
 var ng_control_1 = require('./ng_control');
 exports.RADIO_VALUE_ACCESSOR = {
@@ -26,11 +26,16 @@ var RadioControlRegistry = (function () {
         collection_1.ListWrapper.removeAt(this._accessors, indexToRemove);
     };
     RadioControlRegistry.prototype.select = function (accessor) {
+        var _this = this;
         this._accessors.forEach(function (c) {
-            if (c[0].control.root === accessor._control.control.root && c[1] !== accessor) {
+            if (_this._isSameGroup(c, accessor) && c[1] !== accessor) {
                 c[1].fireUncheck();
             }
         });
+    };
+    RadioControlRegistry.prototype._isSameGroup = function (controlPair, accessor) {
+        return controlPair[0].control.root === accessor._control.control.root &&
+            controlPair[1].name === accessor.name;
     };
     RadioControlRegistry.decorators = [
         { type: core_1.Injectable },
@@ -40,6 +45,8 @@ var RadioControlRegistry = (function () {
 exports.RadioControlRegistry = RadioControlRegistry;
 /**
  * The value provided by the forms API for radio buttons.
+ *
+ * @experimental
  */
 var RadioButtonState = (function () {
     function RadioButtonState(checked, value) {

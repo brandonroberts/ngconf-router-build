@@ -14,8 +14,9 @@ import { PipeTransform } from '@angular/core';
  *
  *     expression | date[:format]
  *
- * where `expression` is a date object or a number (milliseconds since UTC epoch) and
- * `format` indicates which date/time components to include:
+ * where `expression` is a date object or a number (milliseconds since UTC epoch) or an ISO string
+ * (https://www.w3.org/TR/NOTE-datetime) and `format` indicates which date/time components to
+ * include:
  *
  *  | Component | Symbol | Short Form   | Long Form         | Numeric   | 2-digit   |
  *  |-----------|:------:|--------------|-------------------|-----------|-----------|
@@ -64,8 +65,10 @@ import { PipeTransform } from '@angular/core';
  * ```
  *
  * {@example core/pipes/ts/date_pipe/date_pipe_example.ts region='DatePipe'}
+ *
+ * @experimental
  */
 export declare class DatePipe implements PipeTransform {
     transform(value: any, pattern?: string): string;
-    supports(obj: any): boolean;
+    private supports(obj);
 }

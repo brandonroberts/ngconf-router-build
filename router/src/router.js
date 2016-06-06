@@ -3,8 +3,6 @@ var core_1 = require('@angular/core');
 var lang_1 = require('./facade/lang');
 var collection_1 = require('./facade/collection');
 var async_1 = require('./facade/async');
-var collection_2 = require('./facade/collection');
-var core_2 = require('@angular/core');
 var recognize_1 = require('./recognize');
 var link_1 = require('./link');
 var segments_1 = require('./segments');
@@ -140,7 +138,7 @@ var Router = (function () {
         var _this = this;
         this._locationSubscription = this._location.subscribe(function (change) { _this._navigate(_this._urlSerializer.parse(change['url']), change['pop']); });
     };
-    Router.prototype._navigate = function (url, pop) {
+    Router.prototype._navigate = function (url, preventPushState) {
         var _this = this;
         this._urlTree = url;
         return recognize_1.recognize(this._componentResolver, this._rootComponentType, url, this._routeTree)
@@ -150,8 +148,14 @@ var Router = (function () {
                 .then(function (updated) {
                 if (updated) {
                     _this._routeTree = currTree;
-                    if (lang_1.isBlank(pop) || !pop) {
-                        _this._location.go(_this._urlSerializer.serialize(_this._urlTree));
+                    if (lang_1.isBlank(preventPushState) || !preventPushState) {
+                        var path = _this._urlSerializer.serialize(_this._urlTree);
+                        if (_this._location.isCurrentPathEqualTo(path)) {
+                            _this._location.replaceState(path);
+                        }
+                        else {
+                            _this._location.go(path);
+                        }
                     }
                     _this._changes.emit(null);
                 }
@@ -217,9 +221,9 @@ var _ActivateSegments = (function () {
             {};
         currNode.children.forEach(function (c) {
             _this.activateSegments(c, prevChildren[c.value.outlet], outletMap, components);
-            collection_2.StringMapWrapper.delete(prevChildren, c.value.outlet);
+            collection_1.StringMapWrapper.delete(prevChildren, c.value.outlet);
         });
-        collection_2.StringMapWrapper.forEach(prevChildren, function (v, k) { return _this.deactivateOutlet(outletMap._outlets[k], components); });
+        collection_1.StringMapWrapper.forEach(prevChildren, function (v, k) { return _this.deactivateOutlet(outletMap._outlets[k], components); });
     };
     _ActivateSegments.prototype.activateSegments = function (currNode, prevNode, parentOutletMap, components) {
         var curr = currNode.value;
@@ -238,7 +242,7 @@ var _ActivateSegments = (function () {
         }
     };
     _ActivateSegments.prototype.activateNewSegments = function (outletMap, curr, prev, outlet) {
-        var resolved = core_1.ReflectiveInjector.resolve([core_1.provide(RouterOutletMap, { useValue: outletMap }), core_1.provide(segments_1.RouteSegment, { useValue: curr })]);
+        var resolved = core_1.ReflectiveInjector.resolve([{ provide: RouterOutletMap, useValue: outletMap }, { provide: segments_1.RouteSegment, useValue: curr }]);
         var ref = outlet.activate(segments_1.routeSegmentComponentFactory(curr), resolved, outletMap);
         if (lifecycle_reflector_1.hasLifecycleHook("routerOnActivate", ref.instance)) {
             ref.instance.routerOnActivate(curr, prev, this.currTree, this.prevTree);
@@ -249,10 +253,10 @@ var _ActivateSegments = (function () {
         var outlet = outletMap._outlets[segment.outlet];
         if (lang_1.isBlank(outlet)) {
             if (segment.outlet == constants_1.DEFAULT_OUTLET_NAME) {
-                throw new core_2.BaseException("Cannot find default outlet");
+                throw new core_1.BaseException("Cannot find default outlet");
             }
             else {
-                throw new core_2.BaseException("Cannot find the outlet " + segment.outlet);
+                throw new core_1.BaseException("Cannot find the outlet " + segment.outlet);
             }
         }
         return outlet;
@@ -260,7 +264,7 @@ var _ActivateSegments = (function () {
     _ActivateSegments.prototype.deactivateOutlet = function (outlet, components) {
         var _this = this;
         if (lang_1.isPresent(outlet) && outlet.isActivated) {
-            collection_2.StringMapWrapper.forEach(outlet.outletMap._outlets, function (v, k) { return _this.deactivateOutlet(v, components); });
+            collection_1.StringMapWrapper.forEach(outlet.outletMap._outlets, function (v, k) { return _this.deactivateOutlet(v, components); });
             if (this.performMutation) {
                 outlet.deactivate();
             }

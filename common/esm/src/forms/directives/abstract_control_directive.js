@@ -1,9 +1,11 @@
-import { isPresent } from '../../../src/facade/lang';
-import { unimplemented } from '../../../src/facade/exceptions';
+import { isPresent } from '../../facade/lang';
+import { unimplemented } from '../../facade/exceptions';
 /**
  * Base class for control directives.
  *
  * Only used internally in the forms module.
+ *
+ * @experimental
  */
 export class AbstractControlDirective {
     get control() { return unimplemented(); }

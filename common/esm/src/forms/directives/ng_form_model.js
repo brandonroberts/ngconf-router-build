@@ -1,8 +1,8 @@
 import { Directive, forwardRef, Inject, Optional, Self } from '@angular/core';
-import { isBlank } from '../../../src/facade/lang';
-import { ListWrapper, StringMapWrapper } from '../../../src/facade/collection';
-import { BaseException } from '../../../src/facade/exceptions';
-import { ObservableWrapper, EventEmitter } from '../../../src/facade/async';
+import { isBlank } from '../../facade/lang';
+import { ListWrapper, StringMapWrapper } from '../../facade/collection';
+import { BaseException } from '../../facade/exceptions';
+import { ObservableWrapper, EventEmitter } from '../../facade/async';
 import { ControlContainer } from './control_container';
 import { setUpControl, setUpControlGroup, composeValidators, composeAsyncValidators } from './shared';
 import { Validators, NG_VALIDATORS, NG_ASYNC_VALIDATORS } from '../validators';
@@ -16,6 +16,7 @@ export class NgFormModel extends ControlContainer {
         super();
         this._validators = _validators;
         this._asyncValidators = _asyncValidators;
+        this._submitted = false;
         this.form = null;
         this.directives = [];
         this.ngSubmit = new EventEmitter();
@@ -31,6 +32,7 @@ export class NgFormModel extends ControlContainer {
         }
         this._updateDomValue();
     }
+    get submitted() { return this._submitted; }
     get formDirective() { return this; }
     get control() { return this.form; }
     get path() { return []; }
@@ -56,6 +58,7 @@ export class NgFormModel extends ControlContainer {
         ctrl.updateValue(value);
     }
     onSubmit() {
+        this._submitted = true;
         ObservableWrapper.callEmit(this.ngSubmit, null);
         return false;
     }

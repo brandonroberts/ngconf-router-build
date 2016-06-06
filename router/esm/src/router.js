@@ -1,9 +1,7 @@
-import { provide, ReflectiveInjector } from '@angular/core';
+import { BaseException, ReflectiveInjector } from '@angular/core';
 import { isBlank, isPresent } from './facade/lang';
-import { ListWrapper } from './facade/collection';
+import { ListWrapper, StringMapWrapper } from './facade/collection';
 import { EventEmitter, PromiseWrapper, ObservableWrapper } from './facade/async';
-import { StringMapWrapper } from './facade/collection';
-import { BaseException } from '@angular/core';
 import { recognize } from './recognize';
 import { link } from './link';
 import { routeSegmentComponentFactory, RouteSegment, rootNode, createEmptyRouteTree } from './segments';
@@ -124,7 +122,7 @@ export class Router {
     _setUpLocationChangeListener() {
         this._locationSubscription = this._location.subscribe((change) => { this._navigate(this._urlSerializer.parse(change['url']), change['pop']); });
     }
-    _navigate(url, pop) {
+    _navigate(url, preventPushState) {
         this._urlTree = url;
         return recognize(this._componentResolver, this._rootComponentType, url, this._routeTree)
             .then(currTree => {
@@ -133,8 +131,14 @@ export class Router {
                 .then(updated => {
                 if (updated) {
                     this._routeTree = currTree;
-                    if (isBlank(pop) || !pop) {
-                        this._location.go(this._urlSerializer.serialize(this._urlTree));
+                    if (isBlank(preventPushState) || !preventPushState) {
+                        let path = this._urlSerializer.serialize(this._urlTree);
+                        if (this._location.isCurrentPathEqualTo(path)) {
+                            this._location.replaceState(path);
+                        }
+                        else {
+                            this._location.go(path);
+                        }
                     }
                     this._changes.emit(null);
                 }
@@ -211,7 +215,7 @@ class _ActivateSegments {
         }
     }
     activateNewSegments(outletMap, curr, prev, outlet) {
-        let resolved = ReflectiveInjector.resolve([provide(RouterOutletMap, { useValue: outletMap }), provide(RouteSegment, { useValue: curr })]);
+        let resolved = ReflectiveInjector.resolve([{ provide: RouterOutletMap, useValue: outletMap }, { provide: RouteSegment, useValue: curr }]);
         let ref = outlet.activate(routeSegmentComponentFactory(curr), resolved, outletMap);
         if (hasLifecycleHook("routerOnActivate", ref.instance)) {
             ref.instance.routerOnActivate(curr, prev, this.currTree, this.prevTree);

@@ -10,6 +10,7 @@ import { NumberValueAccessor } from './directives/number_value_accessor';
 import { RadioControlValueAccessor } from './directives/radio_control_value_accessor';
 import { NgControlStatus } from './directives/ng_control_status';
 import { SelectControlValueAccessor, NgSelectOption } from './directives/select_control_value_accessor';
+import { SelectMultipleControlValueAccessor, NgSelectMultipleOption } from './directives/select_multiple_control_value_accessor';
 import { RequiredValidator, MinLengthValidator, MaxLengthValidator, PatternValidator } from './directives/validators';
 export { NgControlName } from './directives/ng_control_name';
 export { NgFormControl } from './directives/ng_form_control';
@@ -23,6 +24,7 @@ export { RadioControlValueAccessor, RadioButtonState } from './directives/radio_
 export { NumberValueAccessor } from './directives/number_value_accessor';
 export { NgControlStatus } from './directives/ng_control_status';
 export { SelectControlValueAccessor, NgSelectOption } from './directives/select_control_value_accessor';
+export { SelectMultipleControlValueAccessor, NgSelectMultipleOption } from './directives/select_multiple_control_value_accessor';
 export { RequiredValidator, MinLengthValidator, MaxLengthValidator, PatternValidator } from './directives/validators';
 export { NgControl } from './directives/ng_control';
 /**
@@ -40,6 +42,7 @@ export { NgControl } from './directives/ng_control';
  * })
  * class MyApp {}
  * ```
+ * @experimental
  */
 export const FORM_DIRECTIVES = [
     NgControlName,
@@ -49,10 +52,12 @@ export const FORM_DIRECTIVES = [
     NgFormModel,
     NgForm,
     NgSelectOption,
+    NgSelectMultipleOption,
     DefaultValueAccessor,
     NumberValueAccessor,
     CheckboxControlValueAccessor,
     SelectControlValueAccessor,
+    SelectMultipleControlValueAccessor,
     RadioControlValueAccessor,
     NgControlStatus,
     RequiredValidator,

@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v$$ANGULAR_VERSION$$
+ * @license AngularJS v2.0.0-rc.1
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -563,10 +563,17 @@ var __extends = (this && this.__extends) || function (d, b) {
      * }
      * ```
      *
-     * Use Rx.Observable but provides an adapter to make it work as specified here:
+     * The events payload can be accessed by the parameter `$event` on the components output event handler:
+     *
+     * ```
+     * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
+     * ```
+     *
+     * Uses Rx.Observable but provides an adapter to make it work as specified here:
      * https://github.com/jhusain/observable-spec
      *
      * Once a reference implementation of the spec is available, switch to it.
+     * @stable
      */
     var EventEmitter = (function (_super) {
         __extends(EventEmitter, _super);
@@ -575,7 +582,7 @@ var __extends = (this && this.__extends) || function (d, b) {
          * delivers events synchronously or asynchronously.
          */
         function EventEmitter(isAsync) {
-            if (isAsync === void 0) { isAsync = true; }
+            if (isAsync === void 0) { isAsync = false; }
             _super.call(this);
             this.__isAsync = isAsync;
         }
@@ -799,6 +806,8 @@ var __extends = (this && this.__extends) || function (d, b) {
         RoutesMetadata.prototype.toString = function () { return "@Routes(" + this.routes + ")"; };
         return RoutesMetadata;
     }());
+    var makeDecorator = _angular_core.__core_private__.makeDecorator;
+    var reflector = _angular_core.__core_private__.reflector;
     function recognize(componentResolver, rootComponent, url, existingTree) {
         var matched = new _MatchResult(rootComponent, [url.root], {}, rootNode(url).children, []);
         return _constructSegment(componentResolver, matched, rootNode(existingTree))
@@ -960,9 +969,12 @@ var __extends = (this && this.__extends) || function (d, b) {
         return _MatchResult;
     }());
     function _readMetadata(componentType) {
-        var metadata = _angular_core.reflector.annotations(componentType).filter(function (f) { return f instanceof RoutesMetadata; });
+        var metadata = reflector.annotations(componentType).filter(function (f) { return f instanceof RoutesMetadata; });
         return ListWrapper.first(metadata);
     }
+    /**
+     * @stable
+     */
     var BaseException$1 = (function (_super) {
         __extends(BaseException$1, _super);
         function BaseException$1(message) {
@@ -1291,7 +1303,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             var _this = this;
             this._locationSubscription = this._location.subscribe(function (change) { _this._navigate(_this._urlSerializer.parse(change['url']), change['pop']); });
         };
-        Router.prototype._navigate = function (url, pop) {
+        Router.prototype._navigate = function (url, preventPushState) {
             var _this = this;
             this._urlTree = url;
             return recognize(this._componentResolver, this._rootComponentType, url, this._routeTree)
@@ -1301,8 +1313,14 @@ var __extends = (this && this.__extends) || function (d, b) {
                     .then(function (updated) {
                     if (updated) {
                         _this._routeTree = currTree;
-                        if (isBlank(pop) || !pop) {
-                            _this._location.go(_this._urlSerializer.serialize(_this._urlTree));
+                        if (isBlank(preventPushState) || !preventPushState) {
+                            var path = _this._urlSerializer.serialize(_this._urlTree);
+                            if (_this._location.isCurrentPathEqualTo(path)) {
+                                _this._location.replaceState(path);
+                            }
+                            else {
+                                _this._location.go(path);
+                            }
                         }
                         _this._changes.emit(null);
                     }
@@ -1388,7 +1406,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             }
         };
         _ActivateSegments.prototype.activateNewSegments = function (outletMap, curr, prev, outlet) {
-            var resolved = _angular_core.ReflectiveInjector.resolve([_angular_core.provide(RouterOutletMap, { useValue: outletMap }), _angular_core.provide(RouteSegment, { useValue: curr })]);
+            var resolved = _angular_core.ReflectiveInjector.resolve([{ provide: RouterOutletMap, useValue: outletMap }, { provide: RouteSegment, useValue: curr }]);
             var ref = outlet.activate(routeSegmentComponentFactory(curr), resolved, outletMap);
             if (hasLifecycleHook("routerOnActivate", ref.instance)) {
                 ref.instance.routerOnActivate(curr, prev, this.currTree, this.prevTree);
@@ -1421,7 +1439,6 @@ var __extends = (this && this.__extends) || function (d, b) {
         };
         return _ActivateSegments;
     }());
-    var makeDecorator = _angular_core.__core_private__.makeDecorator;
     /**
      * Defines routes for a given component.
      *
@@ -1612,7 +1629,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             useFactory: routerFactory,
             deps: /*@ts2dart_const*/ [_angular_core.ApplicationRef, _angular_core.ComponentResolver, RouterUrlSerializer, RouterOutletMap, _angular_common.Location],
         },
-        /*@ts2dart_Provider*/ { provide: RouteSegment, useFactory: function (r) { return r.routeTree.root; }, deps: [Router] }
+        /*@ts2dart_Provider*/ { provide: RouteSegment, useFactory: routeSegmentFactory, deps: [Router] }
     ];
     function routerFactory(app, componentResolver, urlSerializer, routerOutletMap, location) {
         if (app.componentTypes.length == 0) {
@@ -1623,8 +1640,11 @@ var __extends = (this && this.__extends) || function (d, b) {
         app.registerDisposeListener(function () { return router.dispose(); });
         return router;
     }
+    function routeSegmentFactory(router) {
+        return router.routeTree.root;
+    }
     /**
-     * A list of {@link Provider}s. To use the router, you must add this to your application.
+     * A list of providers. To use the router, you must add this to your application.
      *
      * ```
      * import {Component} from '@angular/core';
@@ -1692,10 +1712,11 @@ var __extends = (this && this.__extends) || function (d, b) {
         { type: undefined, decorators: [{ type: _angular_core.Attribute, args: ['name',] },] },
     ];
     var RouterLink = (function () {
-        function RouterLink(_routeSegment, _router) {
+        function RouterLink(_routeSegment, _router, _locationStrategy) {
             var _this = this;
             this._routeSegment = _routeSegment;
             this._router = _router;
+            this._locationStrategy = _locationStrategy;
             this._commands = [];
             this.isActive = false;
             // because auxiliary links take existing primary and auxiliary routes into account,
@@ -1717,18 +1738,20 @@ var __extends = (this && this.__extends) || function (d, b) {
             enumerable: true,
             configurable: true
         });
-        RouterLink.prototype.onClick = function () {
-            // If no target, or if target is _self, prevent default browser behavior
-            if (!isString(this.target) || this.target == '_self') {
-                this._router.navigate(this._commands, this._routeSegment);
-                return false;
+        RouterLink.prototype.onClick = function (button, ctrlKey, metaKey) {
+            if (button != 0 || ctrlKey || metaKey) {
+                return true;
             }
-            return true;
+            if (isString(this.target) && this.target != '_self') {
+                return true;
+            }
+            this._router.navigate(this._commands, this._routeSegment);
+            return false;
         };
         RouterLink.prototype._updateTargetUrlAndHref = function () {
             var tree = this._router.createUrlTree(this._commands, this._routeSegment);
             if (isPresent(tree)) {
-                this.href = this._router.serializeUrl(tree);
+                this.href = this._locationStrategy.prepareExternalUrl(this._router.serializeUrl(tree));
                 this.isActive = this._router.urlTree.contains(tree);
             }
             else {
@@ -1743,13 +1766,14 @@ var __extends = (this && this.__extends) || function (d, b) {
     RouterLink.ctorParameters = [
         { type: RouteSegment, },
         { type: Router, },
+        { type: _angular_common.LocationStrategy, },
     ];
     RouterLink.propDecorators = {
         'target': [{ type: _angular_core.Input },],
         'href': [{ type: _angular_core.HostBinding },],
         'isActive': [{ type: _angular_core.HostBinding, args: ['class.router-link-active',] },],
         'routerLink': [{ type: _angular_core.Input },],
-        'onClick': [{ type: _angular_core.HostListener, args: ["click",] },],
+        'onClick': [{ type: _angular_core.HostListener, args: ["click", ["$event.button", "$event.ctrlKey", "$event.metaKey"],] },],
     };
     /**
      * A list of directives. To use the router directives like {@link RouterOutlet} and
@@ -1772,7 +1796,6 @@ var __extends = (this && this.__extends) || function (d, b) {
      * ```
      */
     var ROUTER_DIRECTIVES = [RouterOutlet, RouterLink];
-    exports.ROUTER_DIRECTIVES = ROUTER_DIRECTIVES;
     exports.Router = Router;
     exports.RouterOutletMap = RouterOutletMap;
     exports.RouteSegment = RouteSegment;
@@ -1785,4 +1808,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     exports.RouterUrlSerializer = RouterUrlSerializer;
     exports.DefaultRouterUrlSerializer = DefaultRouterUrlSerializer;
     exports.ROUTER_PROVIDERS = ROUTER_PROVIDERS;
+    exports.RouterOutlet = RouterOutlet;
+    exports.RouterLink = RouterLink;
+    exports.ROUTER_DIRECTIVES = ROUTER_DIRECTIVES;
 }));

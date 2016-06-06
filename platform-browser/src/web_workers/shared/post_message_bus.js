@@ -1,7 +1,7 @@
 "use strict";
-var exceptions_1 = require('../../../src/facade/exceptions');
-var async_1 = require('../../../src/facade/async');
-var collection_1 = require('../../../src/facade/collection');
+var exceptions_1 = require('../../facade/exceptions');
+var async_1 = require('../../facade/async');
+var collection_1 = require('../../facade/collection');
 var core_1 = require('@angular/core');
 var PostMessageBusSink = (function () {
     function PostMessageBusSink(_postMessageTarget) {
@@ -62,7 +62,8 @@ var PostMessageBusSource = (function () {
         }
         else {
             // if no eventTarget is given we assume we're in a WebWorker and listen on the global scope
-            addEventListener("message", function (ev) { return _this._handleMessages(ev); });
+            var workerScope = self;
+            workerScope.addEventListener("message", function (ev) { return _this._handleMessages(ev); });
         }
     }
     PostMessageBusSource.prototype.attachToZone = function (zone) { this._zone = zone; };

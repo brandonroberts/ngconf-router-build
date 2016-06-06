@@ -1,7 +1,7 @@
 "use strict";
-var async_1 = require('../../src/facade/async');
+var async_1 = require('../facade/async');
 var ng_zone_impl_1 = require('./ng_zone_impl');
-var exceptions_1 = require('../../src/facade/exceptions');
+var exceptions_1 = require('../facade/exceptions');
 var ng_zone_impl_2 = require('./ng_zone_impl');
 exports.NgZoneError = ng_zone_impl_2.NgZoneError;
 /**
@@ -74,6 +74,7 @@ exports.NgZoneError = ng_zone_impl_2.NgZoneError;
  *   }
  * }
  * ```
+ * @experimental
  */
 var NgZone = (function () {
     function NgZone(_a) {

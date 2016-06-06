@@ -1,6 +1,6 @@
 "use strict";
 var core_1 = require('@angular/core');
-var lang_1 = require('../../src/facade/lang');
+var lang_1 = require('../facade/lang');
 var invalid_pipe_argument_exception_1 = require('./invalid_pipe_argument_exception');
 var interpolationExp = lang_1.RegExpWrapper.create('#');
 var I18nPluralPipe = (function () {
@@ -18,7 +18,6 @@ var I18nPluralPipe = (function () {
     };
     I18nPluralPipe.decorators = [
         { type: core_1.Pipe, args: [{ name: 'i18nPlural', pure: true },] },
-        { type: core_1.Injectable },
     ];
     return I18nPluralPipe;
 }());

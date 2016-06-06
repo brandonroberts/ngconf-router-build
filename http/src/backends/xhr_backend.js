@@ -1,11 +1,13 @@
 "use strict";
+var core_1 = require('@angular/core');
+var platform_browser_1 = require('@angular/platform-browser');
+var interfaces_1 = require('../interfaces');
 var enums_1 = require('../enums');
 var static_response_1 = require('../static_response');
 var headers_1 = require('../headers');
 var base_response_options_1 = require('../base_response_options');
-var core_1 = require('@angular/core');
 var browser_xhr_1 = require('./browser_xhr');
-var lang_1 = require('../../src/facade/lang');
+var lang_1 = require('../facade/lang');
 var Observable_1 = require('rxjs/Observable');
 var http_utils_1 = require('../http_utils');
 var XSSI_PREFIX = ')]}\',\n';
@@ -24,6 +26,9 @@ var XHRConnection = (function () {
         this.response = new Observable_1.Observable(function (responseObserver) {
             var _xhr = browserXHR.build();
             _xhr.open(enums_1.RequestMethod[req.method].toUpperCase(), req.url);
+            if (lang_1.isPresent(req.withCredentials)) {
+                _xhr.withCredentials = req.withCredentials;
+            }
             // load event handler
             var onLoad = function () {
                 // responseText is the old-school way of retrieving response (supported by IE8 & 9)
@@ -50,7 +55,8 @@ var XHRConnection = (function () {
                     responseOptions = baseResponseOptions.merge(responseOptions);
                 }
                 var response = new static_response_1.Response(responseOptions);
-                if (http_utils_1.isSuccess(status)) {
+                response.ok = http_utils_1.isSuccess(status);
+                if (response.ok) {
                     responseObserver.next(response);
                     // TODO(gdi2290): defer complete if array buffer until done
                     responseObserver.complete();
@@ -66,12 +72,13 @@ var XHRConnection = (function () {
                 }
                 responseObserver.error(new static_response_1.Response(responseOptions));
             };
+            _this.setDetectedContentType(req, _xhr);
             if (lang_1.isPresent(req.headers)) {
                 req.headers.forEach(function (values, name) { return _xhr.setRequestHeader(name, values.join(',')); });
             }
             _xhr.addEventListener('load', onLoad);
             _xhr.addEventListener('error', onError);
-            _xhr.send(_this.request.text());
+            _xhr.send(_this.request.getBody());
             return function () {
                 _xhr.removeEventListener('load', onLoad);
                 _xhr.removeEventListener('error', onError);
@@ -79,15 +86,68 @@ var XHRConnection = (function () {
             };
         });
     }
+    XHRConnection.prototype.setDetectedContentType = function (req, _xhr) {
+        // Skip if a custom Content-Type header is provided
+        if (lang_1.isPresent(req.headers) && lang_1.isPresent(req.headers['Content-Type'])) {
+            return;
+        }
+        // Set the detected content type
+        switch (req.contentType) {
+            case enums_1.ContentType.NONE:
+                break;
+            case enums_1.ContentType.JSON:
+                _xhr.setRequestHeader('Content-Type', 'application/json');
+                break;
+            case enums_1.ContentType.FORM:
+                _xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+                break;
+            case enums_1.ContentType.TEXT:
+                _xhr.setRequestHeader('Content-Type', 'text/plain');
+                break;
+            case enums_1.ContentType.BLOB:
+                var blob = req.blob();
+                if (blob.type) {
+                    _xhr.setRequestHeader('Content-Type', blob.type);
+                }
+                break;
+        }
+    };
     return XHRConnection;
 }());
 exports.XHRConnection = XHRConnection;
+/**
+ * `XSRFConfiguration` sets up Cross Site Request Forgery (XSRF) protection for the application
+ * using a cookie. See https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF) for more
+ * information on XSRF.
+ *
+ * Applications can configure custom cookie and header names by binding an instance of this class
+ * with different `cookieName` and `headerName` values. See the main HTTP documentation for more
+ * details.
+ */
+var CookieXSRFStrategy = (function () {
+    function CookieXSRFStrategy(_cookieName, _headerName) {
+        if (_cookieName === void 0) { _cookieName = 'XSRF-TOKEN'; }
+        if (_headerName === void 0) { _headerName = 'X-XSRF-TOKEN'; }
+        this._cookieName = _cookieName;
+        this._headerName = _headerName;
+    }
+    CookieXSRFStrategy.prototype.configureRequest = function (req) {
+        var xsrfToken = platform_browser_1.__platform_browser_private__.getDOM().getCookie(this._cookieName);
+        if (xsrfToken && !req.headers.has(this._headerName)) {
+            req.headers.set(this._headerName, xsrfToken);
+        }
+    };
+    return CookieXSRFStrategy;
+}());
+exports.CookieXSRFStrategy = CookieXSRFStrategy;
 var XHRBackend = (function () {
-    function XHRBackend(_browserXHR, _baseResponseOptions) {
+    function XHRBackend(_browserXHR, _baseResponseOptions, _xsrfStrategy) {
         this._browserXHR = _browserXHR;
         this._baseResponseOptions = _baseResponseOptions;
+        this._xsrfStrategy = _xsrfStrategy;
     }
     XHRBackend.prototype.createConnection = function (request) {
+        this._xsrfStrategy.configureRequest(request);
         return new XHRConnection(request, this._browserXHR, this._baseResponseOptions);
     };
     XHRBackend.decorators = [
@@ -96,6 +156,7 @@ var XHRBackend = (function () {
     XHRBackend.ctorParameters = [
         { type: browser_xhr_1.BrowserXhr, },
         { type: base_response_options_1.ResponseOptions, },
+        { type: interfaces_1.XSRFStrategy, },
     ];
     return XHRBackend;
 }());

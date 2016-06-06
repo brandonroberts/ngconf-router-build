@@ -1,5 +1,5 @@
-import { AttributeMetadata, OptionalMetadata, ComponentMetadata, SelfMetadata, HostMetadata, SkipSelfMetadata, Provider, PLATFORM_DIRECTIVES, PLATFORM_PIPES, reflector, Injectable, Inject, Optional, QueryMetadata, resolveForwardRef, InjectMetadata } from '@angular/core';
-import { LIFECYCLE_HOOKS_VALUES, ReflectorReader } from '../core_private';
+import { AnimationStateDeclarationMetadata, AnimationStateTransitionMetadata, AnimationStyleMetadata, AnimationKeyframesSequenceMetadata, AnimationAnimateMetadata, AnimationWithStepsMetadata, AnimationGroupMetadata, AttributeMetadata, OptionalMetadata, ComponentMetadata, SelfMetadata, HostMetadata, SkipSelfMetadata, Provider, PLATFORM_DIRECTIVES, PLATFORM_PIPES, Injectable, Inject, Optional, QueryMetadata, resolveForwardRef, InjectMetadata } from '@angular/core';
+import { LIFECYCLE_HOOKS_VALUES, ReflectorReader, reflector } from '../core_private';
 import { Type, isBlank, isPresent, isArray, stringify, isString, isStringMap } from '../src/facade/lang';
 import { StringMapWrapper } from '../src/facade/collection';
 import { BaseException } from '../src/facade/exceptions';
@@ -43,6 +43,45 @@ export class CompileMetadataResolver {
         }
         return sanitizeIdentifier(identifier);
     }
+    getAnimationEntryMetadata(entry) {
+        var defs = entry.definitions.map(def => this.getAnimationStateMetadata(def));
+        return new cpl.CompileAnimationEntryMetadata(entry.name, defs);
+    }
+    getAnimationStateMetadata(value) {
+        if (value instanceof AnimationStateDeclarationMetadata) {
+            var styles = this.getAnimationStyleMetadata(value.styles);
+            return new cpl.CompileAnimationStateDeclarationMetadata(value.stateNameExpr, styles);
+        }
+        else if (value instanceof AnimationStateTransitionMetadata) {
+            return new cpl.CompileAnimationStateTransitionMetadata(value.stateChangeExpr, this.getAnimationMetadata(value.steps));
+        }
+        return null;
+    }
+    getAnimationStyleMetadata(value) {
+        return new cpl.CompileAnimationStyleMetadata(value.offset, value.styles);
+    }
+    getAnimationMetadata(value) {
+        if (value instanceof AnimationStyleMetadata) {
+            return this.getAnimationStyleMetadata(value);
+        }
+        else if (value instanceof AnimationKeyframesSequenceMetadata) {
+            return new cpl.CompileAnimationKeyframesSequenceMetadata(value.steps.map(entry => this.getAnimationStyleMetadata(entry)));
+        }
+        else if (value instanceof AnimationAnimateMetadata) {
+            let animateData = this.getAnimationMetadata(value.styles);
+            return new cpl.CompileAnimationAnimateMetadata(value.timings, animateData);
+        }
+        else if (value instanceof AnimationWithStepsMetadata) {
+            var steps = value.steps.map(step => this.getAnimationMetadata(step));
+            if (value instanceof AnimationGroupMetadata) {
+                return new cpl.CompileAnimationGroupMetadata(steps);
+            }
+            else {
+                return new cpl.CompileAnimationSequenceMetadata(steps);
+            }
+        }
+        return null;
+    }
     getDirectiveMetadata(directiveType) {
         var meta = this._directiveCache.get(directiveType);
         if (isBlank(meta)) {
@@ -56,12 +95,16 @@ export class CompileMetadataResolver {
                 var cmpMeta = dirMeta;
                 var viewMeta = this._viewResolver.resolve(directiveType);
                 assertArrayOfStrings('styles', viewMeta.styles);
+                var animations = isPresent(viewMeta.animations)
+                    ? viewMeta.animations.map(e => this.getAnimationEntryMetadata(e))
+                    : null;
                 templateMeta = new cpl.CompileTemplateMetadata({
                     encapsulation: viewMeta.encapsulation,
                     template: viewMeta.template,
                     templateUrl: viewMeta.templateUrl,
                     styles: viewMeta.styles,
-                    styleUrls: viewMeta.styleUrls
+                    styleUrls: viewMeta.styleUrls,
+                    animations: animations
                 });
                 changeDetectionStrategy = cmpMeta.changeDetection;
                 if (isPresent(dirMeta.viewProviders)) {
@@ -76,8 +119,8 @@ export class CompileMetadataResolver {
             var queries = [];
             var viewQueries = [];
             if (isPresent(dirMeta.queries)) {
-                queries = this.getQueriesMetadata(dirMeta.queries, false);
-                viewQueries = this.getQueriesMetadata(dirMeta.queries, true);
+                queries = this.getQueriesMetadata(dirMeta.queries, false, directiveType);
+                viewQueries = this.getQueriesMetadata(dirMeta.queries, true, directiveType);
             }
             meta = cpl.CompileDirectiveMetadata.create({
                 selector: dirMeta.selector,
@@ -228,8 +271,8 @@ export class CompileMetadataResolver {
                 isSelf: isSelf,
                 isSkipSelf: isSkipSelf,
                 isOptional: isOptional,
-                query: isPresent(query) ? this.getQueryMetadata(query, null) : null,
-                viewQuery: isPresent(viewQuery) ? this.getQueryMetadata(viewQuery, null) : null,
+                query: isPresent(query) ? this.getQueryMetadata(query, null, typeOrFunc) : null,
+                viewQuery: isPresent(viewQuery) ? this.getQueryMetadata(viewQuery, null, typeOrFunc) : null,
                 token: this.getTokenMetadata(token)
             });
         });
@@ -291,21 +334,24 @@ export class CompileMetadataResolver {
             multi: provider.multi
         });
     }
-    getQueriesMetadata(queries, isViewQuery) {
+    getQueriesMetadata(queries, isViewQuery, directiveType) {
         var compileQueries = [];
         StringMapWrapper.forEach(queries, (query, propertyName) => {
             if (query.isViewQuery === isViewQuery) {
-                compileQueries.push(this.getQueryMetadata(query, propertyName));
+                compileQueries.push(this.getQueryMetadata(query, propertyName, directiveType));
             }
         });
         return compileQueries;
     }
-    getQueryMetadata(q, propertyName) {
+    getQueryMetadata(q, propertyName, typeOrFunc) {
         var selectors;
         if (q.isVarBindingQuery) {
             selectors = q.varBindings.map(varName => this.getTokenMetadata(varName));
         }
         else {
+            if (!isPresent(q.selector)) {
+                throw new BaseException(`Can't construct a query for the property "${propertyName}" of "${stringify(typeOrFunc)}" since the query selector wasn't defined.`);
+            }
             selectors = [this.getTokenMetadata(q.selector)];
         }
         return new cpl.CompileQueryMetadata({

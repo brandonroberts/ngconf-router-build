@@ -1,4 +1,4 @@
-import { ConnectionBackend, Connection } from '../interfaces';
+import { ConnectionBackend, Connection, XSRFStrategy } from '../interfaces';
 import { ReadyState } from '../enums';
 import { Request } from '../static_request';
 import { Response } from '../static_response';
@@ -22,6 +22,22 @@ export declare class XHRConnection implements Connection {
     response: Observable<Response>;
     readyState: ReadyState;
     constructor(req: Request, browserXHR: BrowserXhr, baseResponseOptions?: ResponseOptions);
+    setDetectedContentType(req: any, _xhr: any): void;
+}
+/**
+ * `XSRFConfiguration` sets up Cross Site Request Forgery (XSRF) protection for the application
+ * using a cookie. See https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF) for more
+ * information on XSRF.
+ *
+ * Applications can configure custom cookie and header names by binding an instance of this class
+ * with different `cookieName` and `headerName` values. See the main HTTP documentation for more
+ * details.
+ */
+export declare class CookieXSRFStrategy implements XSRFStrategy {
+    private _cookieName;
+    private _headerName;
+    constructor(_cookieName?: string, _headerName?: string);
+    configureRequest(req: Request): void;
 }
 /**
  * Creates {@link XHRConnection} instances.
@@ -37,9 +53,9 @@ export declare class XHRConnection implements Connection {
  * @Component({
  *   viewProviders: [
  *     HTTP_PROVIDERS,
- *     provide(Http, {useFactory: (backend, options) => {
+ *     {provide: Http, useFactory: (backend, options) => {
  *       return new Http(backend, options);
- *     }, deps: [MyNodeBackend, BaseRequestOptions]})]
+ *     }, deps: [MyNodeBackend, BaseRequestOptions]}]
  * })
  * class MyComponent {
  *   constructor(http:Http) {
@@ -47,11 +63,11 @@ export declare class XHRConnection implements Connection {
  *   }
  * }
  * ```
- *
  **/
 export declare class XHRBackend implements ConnectionBackend {
     private _browserXHR;
     private _baseResponseOptions;
-    constructor(_browserXHR: BrowserXhr, _baseResponseOptions: ResponseOptions);
+    private _xsrfStrategy;
+    constructor(_browserXHR: BrowserXhr, _baseResponseOptions: ResponseOptions, _xsrfStrategy: XSRFStrategy);
     createConnection(request: Request): XHRConnection;
 }

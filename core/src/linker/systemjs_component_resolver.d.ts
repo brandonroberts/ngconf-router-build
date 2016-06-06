@@ -1,8 +1,9 @@
 import { ComponentResolver } from './component_resolver';
-import { Type } from '../../src/facade/lang';
+import { Type } from '../facade/lang';
 import { ComponentFactory } from './component_factory';
 /**
  * Component resolver that can load components lazily
+ * @experimental
  */
 export declare class SystemJsComponentResolver implements ComponentResolver {
     private _resolver;

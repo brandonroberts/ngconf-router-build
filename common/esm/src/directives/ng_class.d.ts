@@ -43,7 +43,7 @@ import { DoCheck, OnDestroy, ElementRef, IterableDiffers, KeyValueDiffers, Rende
  *       color: gray;
  *       border: medium solid gray;
  *     }
- *   `]
+ *   `],
  *   directives: [NgClass]
  * })
  * class ToggleButton {
@@ -57,6 +57,8 @@ import { DoCheck, OnDestroy, ElementRef, IterableDiffers, KeyValueDiffers, Rende
  *   }
  * }
  * ```
+ *
+ * @stable
  */
 export declare class NgClass implements DoCheck, OnDestroy {
     private _iterableDiffers;

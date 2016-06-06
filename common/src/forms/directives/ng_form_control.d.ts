@@ -1,5 +1,5 @@
-import { OnChanges, SimpleChange } from '@angular/core';
-import { EventEmitter } from '../../../src/facade/async';
+import { OnChanges, SimpleChanges } from '@angular/core';
+import { EventEmitter } from '../../facade/async';
 import { NgControl } from './ng_control';
 import { Control } from '../model';
 import { ControlValueAccessor } from './control_value_accessor';
@@ -51,6 +51,8 @@ export declare const formControlBinding: any;
  *  login:string;
  * }
  *  ```
+ *
+ *  @experimental
  */
 export declare class NgFormControl extends NgControl implements OnChanges {
     private _validators;
@@ -60,9 +62,7 @@ export declare class NgFormControl extends NgControl implements OnChanges {
     model: any;
     viewModel: any;
     constructor(_validators: any[], _asyncValidators: any[], valueAccessors: ControlValueAccessor[]);
-    ngOnChanges(changes: {
-        [key: string]: SimpleChange;
-    }): void;
+    ngOnChanges(changes: SimpleChanges): void;
     path: string[];
     validator: ValidatorFn;
     asyncValidator: AsyncValidatorFn;

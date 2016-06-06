@@ -1,10 +1,12 @@
 "use strict";
-var lang_1 = require('../../../src/facade/lang');
-var exceptions_1 = require('../../../src/facade/exceptions');
+var lang_1 = require('../../facade/lang');
+var exceptions_1 = require('../../facade/exceptions');
 /**
  * Base class for control directives.
  *
  * Only used internally in the forms module.
+ *
+ * @experimental
  */
 var AbstractControlDirective = (function () {
     function AbstractControlDirective() {

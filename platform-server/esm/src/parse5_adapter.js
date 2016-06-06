@@ -547,6 +547,7 @@ export class Parse5DomAdapter extends DomAdapter {
     setGlobalVar(path, value) { setValueOnPath(global, path, value); }
     requestAnimationFrame(callback) { return setTimeout(callback, 0); }
     cancelAnimationFrame(id) { clearTimeout(id); }
+    supportsWebAnimation() { return false; }
     performanceNow() { return DateWrapper.toMillis(DateWrapper.now()); }
     getAnimationPrefix() { return ''; }
     getTransitionEnd() { return 'transitionend'; }
@@ -555,6 +556,10 @@ export class Parse5DomAdapter extends DomAdapter {
     parse(templateHtml) { throw new Error('not implemented'); }
     invoke(el, methodName, args) { throw new Error('not implemented'); }
     getEventKey(event) { throw new Error('not implemented'); }
+    supportsCookies() { return false; }
+    getCookie(name) { throw new Error('not implemented'); }
+    setCookie(name, value) { throw new Error('not implemented'); }
+    animate(element, keyframes, options) { throw new Error('not implemented'); }
 }
 // TODO: build a proper list, this one is all the keys of a HTMLInputElement
 var _HTMLElementPropertyList = [

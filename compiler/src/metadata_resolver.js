@@ -33,7 +33,7 @@ var CompileMetadataResolver = (function () {
             this._reflector = _reflector;
         }
         else {
-            this._reflector = core_1.reflector;
+            this._reflector = core_private_1.reflector;
         }
     }
     CompileMetadataResolver.prototype.sanitizeTokenName = function (token) {
@@ -49,7 +49,49 @@ var CompileMetadataResolver = (function () {
         }
         return util_1.sanitizeIdentifier(identifier);
     };
+    CompileMetadataResolver.prototype.getAnimationEntryMetadata = function (entry) {
+        var _this = this;
+        var defs = entry.definitions.map(function (def) { return _this.getAnimationStateMetadata(def); });
+        return new cpl.CompileAnimationEntryMetadata(entry.name, defs);
+    };
+    CompileMetadataResolver.prototype.getAnimationStateMetadata = function (value) {
+        if (value instanceof core_1.AnimationStateDeclarationMetadata) {
+            var styles = this.getAnimationStyleMetadata(value.styles);
+            return new cpl.CompileAnimationStateDeclarationMetadata(value.stateNameExpr, styles);
+        }
+        else if (value instanceof core_1.AnimationStateTransitionMetadata) {
+            return new cpl.CompileAnimationStateTransitionMetadata(value.stateChangeExpr, this.getAnimationMetadata(value.steps));
+        }
+        return null;
+    };
+    CompileMetadataResolver.prototype.getAnimationStyleMetadata = function (value) {
+        return new cpl.CompileAnimationStyleMetadata(value.offset, value.styles);
+    };
+    CompileMetadataResolver.prototype.getAnimationMetadata = function (value) {
+        var _this = this;
+        if (value instanceof core_1.AnimationStyleMetadata) {
+            return this.getAnimationStyleMetadata(value);
+        }
+        else if (value instanceof core_1.AnimationKeyframesSequenceMetadata) {
+            return new cpl.CompileAnimationKeyframesSequenceMetadata(value.steps.map(function (entry) { return _this.getAnimationStyleMetadata(entry); }));
+        }
+        else if (value instanceof core_1.AnimationAnimateMetadata) {
+            var animateData = this.getAnimationMetadata(value.styles);
+            return new cpl.CompileAnimationAnimateMetadata(value.timings, animateData);
+        }
+        else if (value instanceof core_1.AnimationWithStepsMetadata) {
+            var steps = value.steps.map(function (step) { return _this.getAnimationMetadata(step); });
+            if (value instanceof core_1.AnimationGroupMetadata) {
+                return new cpl.CompileAnimationGroupMetadata(steps);
+            }
+            else {
+                return new cpl.CompileAnimationSequenceMetadata(steps);
+            }
+        }
+        return null;
+    };
     CompileMetadataResolver.prototype.getDirectiveMetadata = function (directiveType) {
+        var _this = this;
         var meta = this._directiveCache.get(directiveType);
         if (lang_1.isBlank(meta)) {
             var dirMeta = this._directiveResolver.resolve(directiveType);
@@ -62,12 +104,16 @@ var CompileMetadataResolver = (function () {
                 var cmpMeta = dirMeta;
                 var viewMeta = this._viewResolver.resolve(directiveType);
                 assertions_1.assertArrayOfStrings('styles', viewMeta.styles);
+                var animations = lang_1.isPresent(viewMeta.animations)
+                    ? viewMeta.animations.map(function (e) { return _this.getAnimationEntryMetadata(e); })
+                    : null;
                 templateMeta = new cpl.CompileTemplateMetadata({
                     encapsulation: viewMeta.encapsulation,
                     template: viewMeta.template,
                     templateUrl: viewMeta.templateUrl,
                     styles: viewMeta.styles,
-                    styleUrls: viewMeta.styleUrls
+                    styleUrls: viewMeta.styleUrls,
+                    animations: animations
                 });
                 changeDetectionStrategy = cmpMeta.changeDetection;
                 if (lang_1.isPresent(dirMeta.viewProviders)) {
@@ -82,8 +128,8 @@ var CompileMetadataResolver = (function () {
             var queries = [];
             var viewQueries = [];
             if (lang_1.isPresent(dirMeta.queries)) {
-                queries = this.getQueriesMetadata(dirMeta.queries, false);
-                viewQueries = this.getQueriesMetadata(dirMeta.queries, true);
+                queries = this.getQueriesMetadata(dirMeta.queries, false, directiveType);
+                viewQueries = this.getQueriesMetadata(dirMeta.queries, true, directiveType);
             }
             meta = cpl.CompileDirectiveMetadata.create({
                 selector: dirMeta.selector,
@@ -237,8 +283,8 @@ var CompileMetadataResolver = (function () {
                 isSelf: isSelf,
                 isSkipSelf: isSkipSelf,
                 isOptional: isOptional,
-                query: lang_1.isPresent(query) ? _this.getQueryMetadata(query, null) : null,
-                viewQuery: lang_1.isPresent(viewQuery) ? _this.getQueryMetadata(viewQuery, null) : null,
+                query: lang_1.isPresent(query) ? _this.getQueryMetadata(query, null, typeOrFunc) : null,
+                viewQuery: lang_1.isPresent(viewQuery) ? _this.getQueryMetadata(viewQuery, null, typeOrFunc) : null,
                 token: _this.getTokenMetadata(token)
             });
         });
@@ -301,23 +347,26 @@ var CompileMetadataResolver = (function () {
             multi: provider.multi
         });
     };
-    CompileMetadataResolver.prototype.getQueriesMetadata = function (queries, isViewQuery) {
+    CompileMetadataResolver.prototype.getQueriesMetadata = function (queries, isViewQuery, directiveType) {
         var _this = this;
         var compileQueries = [];
         collection_1.StringMapWrapper.forEach(queries, function (query, propertyName) {
             if (query.isViewQuery === isViewQuery) {
-                compileQueries.push(_this.getQueryMetadata(query, propertyName));
+                compileQueries.push(_this.getQueryMetadata(query, propertyName, directiveType));
             }
         });
         return compileQueries;
     };
-    CompileMetadataResolver.prototype.getQueryMetadata = function (q, propertyName) {
+    CompileMetadataResolver.prototype.getQueryMetadata = function (q, propertyName, typeOrFunc) {
         var _this = this;
         var selectors;
         if (q.isVarBindingQuery) {
             selectors = q.varBindings.map(function (varName) { return _this.getTokenMetadata(varName); });
         }
         else {
+            if (!lang_1.isPresent(q.selector)) {
+                throw new exceptions_1.BaseException("Can't construct a query for the property \"" + propertyName + "\" of \"" + lang_1.stringify(typeOrFunc) + "\" since the query selector wasn't defined.");
+            }
             selectors = [this.getTokenMetadata(q.selector)];
         }
         return new cpl.CompileQueryMetadata({

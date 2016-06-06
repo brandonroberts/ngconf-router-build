@@ -112,6 +112,7 @@ export declare class Parse5DomAdapter extends DomAdapter {
     setGlobalVar(path: string, value: any): void;
     requestAnimationFrame(callback: any): number;
     cancelAnimationFrame(id: number): void;
+    supportsWebAnimation(): boolean;
     performanceNow(): number;
     getAnimationPrefix(): string;
     getTransitionEnd(): string;
@@ -120,4 +121,8 @@ export declare class Parse5DomAdapter extends DomAdapter {
     parse(templateHtml: string): void;
     invoke(el: Element, methodName: string, args: any[]): any;
     getEventKey(event: any): string;
+    supportsCookies(): boolean;
+    getCookie(name: string): string;
+    setCookie(name: string, value: string): void;
+    animate(element: any, keyframes: any[], options: any): any;
 }

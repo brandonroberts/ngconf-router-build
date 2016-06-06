@@ -1,4 +1,4 @@
-import { ConcreteType, Type } from '../../src/facade/lang';
+import { ConcreteType, Type } from '../facade/lang';
 /**
  * Declares the interface to be used with {@link Class}.
  */
@@ -21,7 +21,7 @@ export interface ClassDefinition {
      * Other methods on the class. Note that values should have type 'Function' but TS requires
      * all properties to have a narrower type than the index signature.
      */
-    [x: string]: Type | Function | any[];
+    [x: string]: Type | Function | any[] | undefined;
 }
 /**
  * An interface implemented by all Angular type decorators, which allows them to be used as ES7
@@ -142,6 +142,7 @@ export interface TypeDecorator {
  *   }
  * });
  * ```
+ * @stable
  */
 export declare function Class(clsDef: ClassDefinition): ConcreteType;
 export declare function makeDecorator(annotationCls: any, chainFn?: (fn: Function) => void): (...args: any[]) => (cls: any) => any;

@@ -1,8 +1,9 @@
-import { Type } from '../../src/facade/lang';
+import { Type } from '../facade/lang';
 import { ComponentFactory } from './component_factory';
 /**
  * Low-level service for loading {@link ComponentFactory}s, which
  * can later be used to create and render a Component instance.
+ * @experimental
  */
 export declare abstract class ComponentResolver {
     abstract resolveComponent(component: Type | string): Promise<ComponentFactory<any>>;

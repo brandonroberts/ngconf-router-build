@@ -1,6 +1,6 @@
-import { ListWrapper } from '../../src/facade/collection';
-import { stringify, isBlank } from '../../src/facade/lang';
-import { BaseException, WrappedException } from '../../src/facade/exceptions';
+import { ListWrapper } from '../facade/collection';
+import { stringify, isBlank } from '../facade/lang';
+import { BaseException, WrappedException } from '../facade/exceptions';
 function findFirstClosedCycle(keys) {
     var res = [];
     for (var i = 0; i < keys.length; ++i) {
@@ -26,6 +26,7 @@ function constructResolvingPath(keys) {
 }
 /**
  * Base class for all errors arising from misconfigured providers.
+ * @stable
  */
 export class AbstractProviderError extends BaseException {
     constructor(injector, key, constructResolvingMessage) {
@@ -55,6 +56,7 @@ export class AbstractProviderError extends BaseException {
  *
  * expect(() => Injector.resolveAndCreate([A])).toThrowError();
  * ```
+ * @stable
  */
 export class NoProviderError extends AbstractProviderError {
     constructor(injector, key) {
@@ -71,14 +73,15 @@ export class NoProviderError extends AbstractProviderError {
  *
  * ```typescript
  * var injector = Injector.resolveAndCreate([
- *   provide("one", {useFactory: (two) => "two", deps: [[new Inject("two")]]}),
- *   provide("two", {useFactory: (one) => "one", deps: [[new Inject("one")]]})
+ *   {provide: "one", useFactory: (two) => "two", deps: [[new Inject("two")]]},
+ *   {provide: "two", useFactory: (one) => "one", deps: [[new Inject("one")]]}
  * ]);
  *
  * expect(() => injector.get("one")).toThrowError();
  * ```
  *
  * Retrieving `A` or `B` throws a `CyclicDependencyError` as the graph above cannot be constructed.
+ * @stable
  */
 export class CyclicDependencyError extends AbstractProviderError {
     constructor(injector, key) {
@@ -112,6 +115,7 @@ export class CyclicDependencyError extends AbstractProviderError {
  *   expect(e.originalStack).toBeDefined();
  * }
  * ```
+ * @stable
  */
 export class InstantiationError extends WrappedException {
     constructor(injector, originalException, originalStack, key) {
@@ -139,11 +143,11 @@ export class InstantiationError extends WrappedException {
  * ```typescript
  * expect(() => Injector.resolveAndCreate(["not a type"])).toThrowError();
  * ```
+ * @stable
  */
 export class InvalidProviderError extends BaseException {
     constructor(provider) {
-        super("Invalid provider - only instances of Provider and Type are allowed, got: " +
-            provider.toString());
+        super(`Invalid provider - only instances of Provider and Type are allowed, got: ${provider}`);
     }
 }
 /**
@@ -173,6 +177,7 @@ export class InvalidProviderError extends BaseException {
  *
  * expect(() => Injector.resolveAndCreate([A,B])).toThrowError();
  * ```
+ * @stable
  */
 export class NoAnnotationError extends BaseException {
     constructor(typeOrFunc, params) {
@@ -207,6 +212,7 @@ export class NoAnnotationError extends BaseException {
  *
  * expect(() => injector.getAt(100)).toThrowError();
  * ```
+ * @stable
  */
 export class OutOfBoundsError extends BaseException {
     constructor(index) {

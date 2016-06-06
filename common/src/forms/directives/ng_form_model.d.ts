@@ -1,5 +1,5 @@
-import { SimpleChange, OnChanges } from '@angular/core';
-import { EventEmitter } from '../../../src/facade/async';
+import { SimpleChanges, OnChanges } from '@angular/core';
+import { EventEmitter } from '../../facade/async';
 import { NgControl } from './ng_control';
 import { NgControlGroup } from './ng_control_group';
 import { ControlContainer } from './control_container';
@@ -77,17 +77,19 @@ export declare const formDirectiveProvider: any;
  *  }
  * }
  *  ```
+ *
+ *  @experimental
  */
 export declare class NgFormModel extends ControlContainer implements Form, OnChanges {
     private _validators;
     private _asyncValidators;
+    private _submitted;
     form: ControlGroup;
     directives: NgControl[];
     ngSubmit: EventEmitter<{}>;
     constructor(_validators: any[], _asyncValidators: any[]);
-    ngOnChanges(changes: {
-        [key: string]: SimpleChange;
-    }): void;
+    ngOnChanges(changes: SimpleChanges): void;
+    submitted: boolean;
     formDirective: Form;
     control: ControlGroup;
     path: string[];

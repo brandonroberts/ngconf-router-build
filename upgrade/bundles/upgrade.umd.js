@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v$$ANGULAR_VERSION$$
+ * @license AngularJS v2.0.0-rc.1
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -94,7 +94,7 @@
             this.childNodes = element.contents();
         }
         DowngradeNg2ComponentAdapter.prototype.bootstrapNg2 = function () {
-            var childInjector = _angular_core.ReflectiveInjector.resolveAndCreate([_angular_core.provide(NG1_SCOPE, { useValue: this.componentScope })], this.parentInjector);
+            var childInjector = _angular_core.ReflectiveInjector.resolveAndCreate([{ provide: NG1_SCOPE, useValue: this.componentScope }], this.parentInjector);
             this.contentInsertionPoint = document.createComment('ng1 insertion point');
             this.componentRef =
                 this.componentFactory.create(childInjector, [[this.contentInsertionPoint]], this.element[0]);
@@ -353,10 +353,10 @@
         UpgradeNg1ComponentAdapterBuilder.prototype.compileTemplate = function (compile, templateCache, httpBackend) {
             var _this = this;
             if (this.directive.template !== undefined) {
-                this.linkFn = compileHtml(this.directive.template);
+                this.linkFn = compileHtml(typeof this.directive.template === 'function' ? this.directive.template() : this.directive.template);
             }
             else if (this.directive.templateUrl) {
-                var url = this.directive.templateUrl;
+                var url = typeof this.directive.templateUrl === 'function' ? this.directive.templateUrl() : this.directive.templateUrl;
                 var html = templateCache.get(url);
                 if (html !== undefined) {
                     this.linkFn = compileHtml(html);
@@ -808,8 +808,9 @@
             var platformRef = _angular_platformBrowser.browserPlatform();
             var applicationRef = _angular_core.ReflectiveInjector.resolveAndCreate([
                 _angular_platformBrowser.BROWSER_APP_PROVIDERS,
-                _angular_core.provide(NG1_INJECTOR, { useFactory: function () { return ng1Injector; } }),
-                _angular_core.provide(NG1_COMPILE, { useFactory: function () { return ng1Injector.get(NG1_COMPILE); } }),
+                _angular_platformBrowser.BROWSER_APP_COMPILER_PROVIDERS,
+                { provide: NG1_INJECTOR, useFactory: function () { return ng1Injector; } },
+                { provide: NG1_COMPILE, useFactory: function () { return ng1Injector.get(NG1_COMPILE); } },
                 this.providers
             ], platformRef.injector)
                 .get(_angular_core.ApplicationRef);
@@ -830,7 +831,8 @@
                 .value(NG2_COMPONENT_FACTORY_REF_MAP, componentFactoryRefMap)
                 .config([
                 '$provide',
-                function (provide) {
+                '$injector',
+                function (provide, ng1Injector) {
                     provide.decorator(NG1_ROOT_SCOPE, [
                         '$delegate',
                         function (rootScopeDelegate) {
@@ -845,27 +847,29 @@
                             return rootScope = rootScopeDelegate;
                         }
                     ]);
-                    provide.decorator(NG1_TESTABILITY, [
-                        '$delegate',
-                        function (testabilityDelegate) {
-                            var _this = this;
-                            var ng2Testability = injector.get(_angular_core.Testability);
-                            var origonalWhenStable = testabilityDelegate.whenStable;
-                            var newWhenStable = function (callback) {
-                                var whenStableContext = _this;
-                                origonalWhenStable.call(_this, function () {
-                                    if (ng2Testability.isStable()) {
-                                        callback.apply(this, arguments);
-                                    }
-                                    else {
-                                        ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
-                                    }
-                                });
-                            };
-                            testabilityDelegate.whenStable = newWhenStable;
-                            return testabilityDelegate;
-                        }
-                    ]);
+                    if (ng1Injector.has(NG1_TESTABILITY)) {
+                        provide.decorator(NG1_TESTABILITY, [
+                            '$delegate',
+                            function (testabilityDelegate) {
+                                var _this = this;
+                                var ng2Testability = injector.get(_angular_core.Testability);
+                                var origonalWhenStable = testabilityDelegate.whenStable;
+                                var newWhenStable = function (callback) {
+                                    var whenStableContext = _this;
+                                    origonalWhenStable.call(_this, function () {
+                                        if (ng2Testability.isStable()) {
+                                            callback.apply(this, arguments);
+                                        }
+                                        else {
+                                            ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
+                                        }
+                                    });
+                                };
+                                testabilityDelegate.whenStable = newWhenStable;
+                                return testabilityDelegate;
+                            }
+                        ]);
+                    }
                 }
             ]);
             ng1compilePromise = new Promise(function (resolve, reject) {
@@ -874,7 +878,7 @@
                     '$rootScope',
                     function (injector, rootScope) {
                         ng1Injector = injector;
-                        ngZone.onMicrotaskEmpty.subscribe({ next: function (_) { return ngZone.runOutsideAngular(function () { return rootScope.$apply(); }); } });
+                        ngZone.onMicrotaskEmpty.subscribe({ next: function (_) { return ngZone.runOutsideAngular(function () { return rootScope.$applyAsync(); }); } });
                         UpgradeNg1ComponentAdapterBuilder.resolve(_this.downgradedComponents, injector)
                             .then(resolve, reject);
                     }
@@ -988,10 +992,11 @@
          */
         UpgradeAdapter.prototype.upgradeNg1Provider = function (name, options) {
             var token = options && options.asToken || name;
-            this.providers.push(_angular_core.provide(token, {
+            this.providers.push({
+                provide: token,
                 useFactory: function (ng1Injector) { return ng1Injector.get(name); },
                 deps: [NG1_INJECTOR]
-            }));
+            });
         };
         /**
          * Allows Angular v2 service to be accessible from AngularJS v1.
@@ -1041,15 +1046,15 @@
     function ng1ComponentDirective(info, idPrefix) {
         directiveFactory.$inject = [NG1_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG1_PARSE];
         function directiveFactory(ng1Injector, componentFactoryRefMap, parse) {
-            var componentFactory = componentFactoryRefMap[info.selector];
-            if (!componentFactory)
-                throw new Error('Expecting ComponentFactory for: ' + info.selector);
             var idCount = 0;
             return {
                 restrict: 'E',
                 require: REQUIRE_INJECTOR,
                 link: {
                     post: function (scope, element, attrs, parentInjector, transclude) {
+                        var componentFactory = componentFactoryRefMap[info.selector];
+                        if (!componentFactory)
+                            throw new Error('Expecting ComponentFactory for: ' + info.selector);
                         var domElement = element[0];
                         if (parentInjector === null) {
                             parentInjector = ng1Injector.get(NG2_INJECTOR);

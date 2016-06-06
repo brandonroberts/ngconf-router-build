@@ -1,4 +1,4 @@
-import { OnChanges, OnDestroy, SimpleChange } from '@angular/core';
+import { OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { ControlContainer } from './control_container';
 import { NgControl } from './ng_control';
 import { ControlValueAccessor } from './control_value_accessor';
@@ -22,7 +22,7 @@ export declare const controlNameBinding: any;
  *      directives: [FORM_DIRECTIVES],
  *      template: `
  *        <form #f="ngForm" (submit)='onLogIn(f.value)'>
- *          Login <input type='text' ngControl='login' #l="form">
+ *          Login <input type='text' ngControl='login' #l="ngForm">
  *          <div *ngIf="!l.valid">Login is invalid</div>
  *
  *          Password <input type='password' ngControl='password'>
@@ -59,6 +59,8 @@ export declare const controlNameBinding: any;
  *  }
  * }
  *  ```
+ *
+ *  @experimental
  */
 export declare class NgControlName extends NgControl implements OnChanges, OnDestroy {
     private _parent;
@@ -68,9 +70,7 @@ export declare class NgControlName extends NgControl implements OnChanges, OnDes
     viewModel: any;
     private _added;
     constructor(_parent: ControlContainer, _validators: any[], _asyncValidators: any[], valueAccessors: ControlValueAccessor[]);
-    ngOnChanges(changes: {
-        [key: string]: SimpleChange;
-    }): void;
+    ngOnChanges(changes: SimpleChanges): void;
     ngOnDestroy(): void;
     viewToModelUpdate(newValue: any): void;
     readonly path: string[];

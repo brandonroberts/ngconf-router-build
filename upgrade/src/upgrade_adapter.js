@@ -1,13 +1,12 @@
 "use strict";
-var core_1 = require('@angular/core');
-var platform_browser_1 = require('@angular/platform-browser');
-var platform_browser_2 = require('@angular/platform-browser');
-var metadata_1 = require('./metadata');
-var util_1 = require('./util');
-var constants_1 = require('./constants');
-var downgrade_ng2_adapter_1 = require('./downgrade_ng2_adapter');
-var upgrade_ng1_adapter_1 = require('./upgrade_ng1_adapter');
-var angular = require('./angular_js');
+var core_1 = require("@angular/core");
+var platform_browser_1 = require("@angular/platform-browser");
+var metadata_1 = require("./metadata");
+var util_1 = require("./util");
+var constants_1 = require("./constants");
+var downgrade_ng2_adapter_1 = require("./downgrade_ng2_adapter");
+var upgrade_ng1_adapter_1 = require("./upgrade_ng1_adapter");
+var angular = require("./angular_js");
 var upgradeCount = 0;
 /**
  * Use `UpgradeAdapter` to allow AngularJS v1 and Angular v2 to coexist in a single application.
@@ -268,9 +267,10 @@ var UpgradeAdapter = (function () {
         var ng1Injector = null;
         var platformRef = platform_browser_1.browserPlatform();
         var applicationRef = core_1.ReflectiveInjector.resolveAndCreate([
-            platform_browser_2.BROWSER_APP_PROVIDERS,
-            core_1.provide(constants_1.NG1_INJECTOR, { useFactory: function () { return ng1Injector; } }),
-            core_1.provide(constants_1.NG1_COMPILE, { useFactory: function () { return ng1Injector.get(constants_1.NG1_COMPILE); } }),
+            platform_browser_1.BROWSER_APP_PROVIDERS,
+            platform_browser_1.BROWSER_APP_COMPILER_PROVIDERS,
+            { provide: constants_1.NG1_INJECTOR, useFactory: function () { return ng1Injector; } },
+            { provide: constants_1.NG1_COMPILE, useFactory: function () { return ng1Injector.get(constants_1.NG1_COMPILE); } },
             this.providers
         ], platformRef.injector)
             .get(core_1.ApplicationRef);
@@ -291,7 +291,8 @@ var UpgradeAdapter = (function () {
             .value(constants_1.NG2_COMPONENT_FACTORY_REF_MAP, componentFactoryRefMap)
             .config([
             '$provide',
-            function (provide) {
+            '$injector',
+            function (provide, ng1Injector) {
                 provide.decorator(constants_1.NG1_ROOT_SCOPE, [
                     '$delegate',
                     function (rootScopeDelegate) {
@@ -306,27 +307,29 @@ var UpgradeAdapter = (function () {
                         return rootScope = rootScopeDelegate;
                     }
                 ]);
-                provide.decorator(constants_1.NG1_TESTABILITY, [
-                    '$delegate',
-                    function (testabilityDelegate) {
-                        var _this = this;
-                        var ng2Testability = injector.get(core_1.Testability);
-                        var origonalWhenStable = testabilityDelegate.whenStable;
-                        var newWhenStable = function (callback) {
-                            var whenStableContext = _this;
-                            origonalWhenStable.call(_this, function () {
-                                if (ng2Testability.isStable()) {
-                                    callback.apply(this, arguments);
-                                }
-                                else {
-                                    ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
-                                }
-                            });
-                        };
-                        testabilityDelegate.whenStable = newWhenStable;
-                        return testabilityDelegate;
-                    }
-                ]);
+                if (ng1Injector.has(constants_1.NG1_TESTABILITY)) {
+                    provide.decorator(constants_1.NG1_TESTABILITY, [
+                        '$delegate',
+                        function (testabilityDelegate) {
+                            var _this = this;
+                            var ng2Testability = injector.get(core_1.Testability);
+                            var origonalWhenStable = testabilityDelegate.whenStable;
+                            var newWhenStable = function (callback) {
+                                var whenStableContext = _this;
+                                origonalWhenStable.call(_this, function () {
+                                    if (ng2Testability.isStable()) {
+                                        callback.apply(this, arguments);
+                                    }
+                                    else {
+                                        ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
+                                    }
+                                });
+                            };
+                            testabilityDelegate.whenStable = newWhenStable;
+                            return testabilityDelegate;
+                        }
+                    ]);
+                }
             }
         ]);
         ng1compilePromise = new Promise(function (resolve, reject) {
@@ -335,7 +338,7 @@ var UpgradeAdapter = (function () {
                 '$rootScope',
                 function (injector, rootScope) {
                     ng1Injector = injector;
-                    ngZone.onMicrotaskEmpty.subscribe({ next: function (_) { return ngZone.runOutsideAngular(function () { return rootScope.$apply(); }); } });
+                    ngZone.onMicrotaskEmpty.subscribe({ next: function (_) { return ngZone.runOutsideAngular(function () { return rootScope.$applyAsync(); }); } });
                     upgrade_ng1_adapter_1.UpgradeNg1ComponentAdapterBuilder.resolve(_this.downgradedComponents, injector)
                         .then(resolve, reject);
                 }
@@ -449,10 +452,11 @@ var UpgradeAdapter = (function () {
      */
     UpgradeAdapter.prototype.upgradeNg1Provider = function (name, options) {
         var token = options && options.asToken || name;
-        this.providers.push(core_1.provide(token, {
+        this.providers.push({
+            provide: token,
             useFactory: function (ng1Injector) { return ng1Injector.get(name); },
             deps: [constants_1.NG1_INJECTOR]
-        }));
+        });
     };
     /**
      * Allows Angular v2 service to be accessible from AngularJS v1.
@@ -503,15 +507,15 @@ exports.UpgradeAdapter = UpgradeAdapter;
 function ng1ComponentDirective(info, idPrefix) {
     directiveFactory.$inject = [constants_1.NG1_INJECTOR, constants_1.NG2_COMPONENT_FACTORY_REF_MAP, constants_1.NG1_PARSE];
     function directiveFactory(ng1Injector, componentFactoryRefMap, parse) {
-        var componentFactory = componentFactoryRefMap[info.selector];
-        if (!componentFactory)
-            throw new Error('Expecting ComponentFactory for: ' + info.selector);
         var idCount = 0;
         return {
             restrict: 'E',
             require: constants_1.REQUIRE_INJECTOR,
             link: {
                 post: function (scope, element, attrs, parentInjector, transclude) {
+                    var componentFactory = componentFactoryRefMap[info.selector];
+                    if (!componentFactory)
+                        throw new Error('Expecting ComponentFactory for: ' + info.selector);
                     var domElement = element[0];
                     if (parentInjector === null) {
                         parentInjector = ng1Injector.get(constants_1.NG2_INJECTOR);

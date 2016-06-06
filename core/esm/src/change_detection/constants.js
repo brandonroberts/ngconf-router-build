@@ -1,4 +1,4 @@
-import { isBlank } from '../../src/facade/lang';
+import { isBlank } from '../facade/lang';
 /**
  * Describes the current state of the change detector.
  */
@@ -24,6 +24,7 @@ export var ChangeDetectorState;
 /**
  * Describes within the change detector which strategy will be used the next time change
  * detection is triggered.
+ * @stable
  */
 export var ChangeDetectionStrategy;
 (function (ChangeDetectionStrategy) {

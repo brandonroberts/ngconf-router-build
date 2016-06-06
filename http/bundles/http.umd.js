@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v$$ANGULAR_VERSION$$
+ * @license AngularJS v2.0.0-rc.1
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -9,10 +9,10 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@angular/core'), require('rxjs/Observable')) :
-        typeof define === 'function' && define.amd ? define(['exports', '@angular/core', 'rxjs/Observable'], factory) :
-            (factory((global.ng = global.ng || {}, global.ng.http = global.ng.http || {}), global.ng.core, global.Rx));
-}(this, function (exports, _angular_core, rxjs_Observable) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@angular/core'), require('@angular/platform-browser'), require('rxjs/Observable')) :
+        typeof define === 'function' && define.amd ? define(['exports', '@angular/core', '@angular/platform-browser', 'rxjs/Observable'], factory) :
+            (factory((global.ng = global.ng || {}, global.ng.http = global.ng.http || {}), global.ng.core, global.ng.platformBrowser, global.Rx));
+}(this, function (exports, _angular_core, _angular_platformBrowser, rxjs_Observable) {
     'use strict';
     var globalScope;
     if (typeof window === 'undefined') {
@@ -486,6 +486,9 @@ var __extends = (this && this.__extends) || function (d, b) {
             };
         }
     })();
+    /**
+     * @stable
+     */
     var BaseException = (function (_super) {
         __extends(BaseException, _super);
         function BaseException(message) {
@@ -519,6 +522,64 @@ var __extends = (this && this.__extends) || function (d, b) {
         }
         return Connection;
     }());
+    /** An XSRFStrategy configures XSRF protection (e.g. via headers) on an HTTP request. */
+    var XSRFStrategy = (function () {
+        function XSRFStrategy() {
+        }
+        return XSRFStrategy;
+    }());
+    /**
+     * Supported http methods.
+     */
+    exports.RequestMethod;
+    (function (RequestMethod) {
+        RequestMethod[RequestMethod["Get"] = 0] = "Get";
+        RequestMethod[RequestMethod["Post"] = 1] = "Post";
+        RequestMethod[RequestMethod["Put"] = 2] = "Put";
+        RequestMethod[RequestMethod["Delete"] = 3] = "Delete";
+        RequestMethod[RequestMethod["Options"] = 4] = "Options";
+        RequestMethod[RequestMethod["Head"] = 5] = "Head";
+        RequestMethod[RequestMethod["Patch"] = 6] = "Patch";
+    })(exports.RequestMethod || (exports.RequestMethod = {}));
+    /**
+     * All possible states in which a connection can be, based on
+     * [States](http://www.w3.org/TR/XMLHttpRequest/#states) from the `XMLHttpRequest` spec, but with an
+     * additional "CANCELLED" state.
+     */
+    exports.ReadyState;
+    (function (ReadyState) {
+        ReadyState[ReadyState["Unsent"] = 0] = "Unsent";
+        ReadyState[ReadyState["Open"] = 1] = "Open";
+        ReadyState[ReadyState["HeadersReceived"] = 2] = "HeadersReceived";
+        ReadyState[ReadyState["Loading"] = 3] = "Loading";
+        ReadyState[ReadyState["Done"] = 4] = "Done";
+        ReadyState[ReadyState["Cancelled"] = 5] = "Cancelled";
+    })(exports.ReadyState || (exports.ReadyState = {}));
+    /**
+     * Acceptable response types to be associated with a {@link Response}, based on
+     * [ResponseType](https://fetch.spec.whatwg.org/#responsetype) from the Fetch spec.
+     */
+    exports.ResponseType;
+    (function (ResponseType) {
+        ResponseType[ResponseType["Basic"] = 0] = "Basic";
+        ResponseType[ResponseType["Cors"] = 1] = "Cors";
+        ResponseType[ResponseType["Default"] = 2] = "Default";
+        ResponseType[ResponseType["Error"] = 3] = "Error";
+        ResponseType[ResponseType["Opaque"] = 4] = "Opaque";
+    })(exports.ResponseType || (exports.ResponseType = {}));
+    /**
+     * Supported content type to be automatically associated with a {@link Request}.
+     */
+    var ContentType;
+    (function (ContentType) {
+        ContentType[ContentType["NONE"] = 0] = "NONE";
+        ContentType[ContentType["JSON"] = 1] = "JSON";
+        ContentType[ContentType["FORM"] = 2] = "FORM";
+        ContentType[ContentType["FORM_DATA"] = 3] = "FORM_DATA";
+        ContentType[ContentType["TEXT"] = 4] = "TEXT";
+        ContentType[ContentType["BLOB"] = 5] = "BLOB";
+        ContentType[ContentType["ARRAY_BUFFER"] = 6] = "ARRAY_BUFFER";
+    })(ContentType || (ContentType = {}));
     /**
      * Polyfill for [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers/Headers), as
      * specified in the [Fetch Spec](https://fetch.spec.whatwg.org/#headers-class).
@@ -648,135 +709,6 @@ var __extends = (this && this.__extends) || function (d, b) {
         Headers.prototype.entries = function () { throw new BaseException('"entries" method is not implemented on Headers class'); };
         return Headers;
     }());
-    /**
-     * Supported http methods.
-     */
-    exports.RequestMethod;
-    (function (RequestMethod) {
-        RequestMethod[RequestMethod["Get"] = 0] = "Get";
-        RequestMethod[RequestMethod["Post"] = 1] = "Post";
-        RequestMethod[RequestMethod["Put"] = 2] = "Put";
-        RequestMethod[RequestMethod["Delete"] = 3] = "Delete";
-        RequestMethod[RequestMethod["Options"] = 4] = "Options";
-        RequestMethod[RequestMethod["Head"] = 5] = "Head";
-        RequestMethod[RequestMethod["Patch"] = 6] = "Patch";
-    })(exports.RequestMethod || (exports.RequestMethod = {}));
-    /**
-     * All possible states in which a connection can be, based on
-     * [States](http://www.w3.org/TR/XMLHttpRequest/#states) from the `XMLHttpRequest` spec, but with an
-     * additional "CANCELLED" state.
-     */
-    exports.ReadyState;
-    (function (ReadyState) {
-        ReadyState[ReadyState["Unsent"] = 0] = "Unsent";
-        ReadyState[ReadyState["Open"] = 1] = "Open";
-        ReadyState[ReadyState["HeadersReceived"] = 2] = "HeadersReceived";
-        ReadyState[ReadyState["Loading"] = 3] = "Loading";
-        ReadyState[ReadyState["Done"] = 4] = "Done";
-        ReadyState[ReadyState["Cancelled"] = 5] = "Cancelled";
-    })(exports.ReadyState || (exports.ReadyState = {}));
-    /**
-     * Acceptable response types to be associated with a {@link Response}, based on
-     * [ResponseType](https://fetch.spec.whatwg.org/#responsetype) from the Fetch spec.
-     */
-    exports.ResponseType;
-    (function (ResponseType) {
-        ResponseType[ResponseType["Basic"] = 0] = "Basic";
-        ResponseType[ResponseType["Cors"] = 1] = "Cors";
-        ResponseType[ResponseType["Default"] = 2] = "Default";
-        ResponseType[ResponseType["Error"] = 3] = "Error";
-        ResponseType[ResponseType["Opaque"] = 4] = "Opaque";
-    })(exports.ResponseType || (exports.ResponseType = {}));
-    function normalizeMethodName(method) {
-        if (isString(method)) {
-            var originalMethod = method;
-            method = method
-                .replace(/(\w)(\w*)/g, function (g0, g1, g2) { return g1.toUpperCase() + g2.toLowerCase(); });
-            method = exports.RequestMethod[method];
-            if (typeof method !== 'number')
-                throw makeTypeError("Invalid request method. The method \"" + originalMethod + "\" is not supported.");
-        }
-        return method;
-    }
-    var isSuccess = function (status) { return (status >= 200 && status < 300); };
-    function getResponseURL(xhr) {
-        if ('responseURL' in xhr) {
-            return xhr.responseURL;
-        }
-        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-            return xhr.getResponseHeader('X-Request-URL');
-        }
-        return;
-    }
-    // TODO(jeffbcross): properly implement body accessors
-    /**
-     * Creates `Request` instances from provided values.
-     *
-     * The Request's interface is inspired by the Request constructor defined in the [Fetch
-     * Spec](https://fetch.spec.whatwg.org/#request-class),
-     * but is considered a static value whose body can be accessed many times. There are other
-     * differences in the implementation, but this is the most significant.
-     *
-     * `Request` instances are typically created by higher-level classes, like {@link Http} and
-     * {@link Jsonp}, but it may occasionally be useful to explicitly create `Request` instances.
-     * One such example is when creating services that wrap higher-level services, like {@link Http},
-     * where it may be useful to generate a `Request` with arbitrary headers and search params.
-     *
-     * ```typescript
-     * import {Injectable, Injector} from '@angular/core';
-     * import {HTTP_PROVIDERS, Http, Request, RequestMethod} from '@angular/http';
-     *
-     * @Injectable()
-     * class AutoAuthenticator {
-     *   constructor(public http:Http) {}
-     *   request(url:string) {
-     *     return this.http.request(new Request({
-     *       method: RequestMethod.Get,
-     *       url: url,
-     *       search: 'password=123'
-     *     }));
-     *   }
-     * }
-     *
-     * var injector = Injector.resolveAndCreate([HTTP_PROVIDERS, AutoAuthenticator]);
-     * var authenticator = injector.get(AutoAuthenticator);
-     * authenticator.request('people.json').subscribe(res => {
-     *   //URL should have included '?password=123'
-     *   console.log('people', res.json());
-     * });
-     * ```
-     */
-    var Request = (function () {
-        function Request(requestOptions) {
-            // TODO: assert that url is present
-            var url = requestOptions.url;
-            this.url = requestOptions.url;
-            if (isPresent(requestOptions.search)) {
-                var search = requestOptions.search.toString();
-                if (search.length > 0) {
-                    var prefix = '?';
-                    if (StringWrapper.contains(this.url, '?')) {
-                        prefix = (this.url[this.url.length - 1] == '&') ? '' : '&';
-                    }
-                    // TODO: just delete search-query-looking string in url?
-                    this.url = url + prefix + search;
-                }
-            }
-            this._body = requestOptions.body;
-            this.method = normalizeMethodName(requestOptions.method);
-            // TODO(jeffbcross): implement behavior
-            // Defaults to 'omit', consistent with browser
-            // TODO(jeffbcross): implement behavior
-            this.headers = new Headers(requestOptions.headers);
-        }
-        /**
-         * Returns the request's body as string, assuming that body exists. If body is undefined, return
-         * empty
-         * string.
-         */
-        Request.prototype.text = function () { return isPresent(this._body) ? this._body.toString() : ''; };
-        return Request;
-    }());
     function paramParser(rawParams) {
         if (rawParams === void 0) { rawParams = ''; }
         var map = new Map$1();
@@ -894,12 +826,185 @@ var __extends = (this && this.__extends) || function (d, b) {
         };
         URLSearchParams.prototype.toString = function () {
             var paramsList = [];
-            this.paramsMap.forEach(function (values, k) { values.forEach(function (v) { return paramsList.push(k + '=' + v); }); });
+            this.paramsMap.forEach(function (values, k) { values.forEach(function (v) { return paramsList.push(k + '=' + encodeURIComponent(v)); }); });
             return paramsList.join('&');
         };
         URLSearchParams.prototype.delete = function (param) { this.paramsMap.delete(param); };
         return URLSearchParams;
     }());
+    function normalizeMethodName(method) {
+        if (isString(method)) {
+            var originalMethod = method;
+            method = method
+                .replace(/(\w)(\w*)/g, function (g0, g1, g2) { return g1.toUpperCase() + g2.toLowerCase(); });
+            method = exports.RequestMethod[method];
+            if (typeof method !== 'number')
+                throw makeTypeError("Invalid request method. The method \"" + originalMethod + "\" is not supported.");
+        }
+        return method;
+    }
+    var isSuccess = function (status) { return (status >= 200 && status < 300); };
+    function getResponseURL(xhr) {
+        if ('responseURL' in xhr) {
+            return xhr.responseURL;
+        }
+        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
+            return xhr.getResponseHeader('X-Request-URL');
+        }
+        return;
+    }
+    // TODO(jeffbcross): properly implement body accessors
+    /**
+     * Creates `Request` instances from provided values.
+     *
+     * The Request's interface is inspired by the Request constructor defined in the [Fetch
+     * Spec](https://fetch.spec.whatwg.org/#request-class),
+     * but is considered a static value whose body can be accessed many times. There are other
+     * differences in the implementation, but this is the most significant.
+     *
+     * `Request` instances are typically created by higher-level classes, like {@link Http} and
+     * {@link Jsonp}, but it may occasionally be useful to explicitly create `Request` instances.
+     * One such example is when creating services that wrap higher-level services, like {@link Http},
+     * where it may be useful to generate a `Request` with arbitrary headers and search params.
+     *
+     * ```typescript
+     * import {Injectable, Injector} from '@angular/core';
+     * import {HTTP_PROVIDERS, Http, Request, RequestMethod} from '@angular/http';
+     *
+     * @Injectable()
+     * class AutoAuthenticator {
+     *   constructor(public http:Http) {}
+     *   request(url:string) {
+     *     return this.http.request(new Request({
+     *       method: RequestMethod.Get,
+     *       url: url,
+     *       search: 'password=123'
+     *     }));
+     *   }
+     * }
+     *
+     * var injector = Injector.resolveAndCreate([HTTP_PROVIDERS, AutoAuthenticator]);
+     * var authenticator = injector.get(AutoAuthenticator);
+     * authenticator.request('people.json').subscribe(res => {
+     *   //URL should have included '?password=123'
+     *   console.log('people', res.json());
+     * });
+     * ```
+     */
+    var Request = (function () {
+        function Request(requestOptions) {
+            // TODO: assert that url is present
+            var url = requestOptions.url;
+            this.url = requestOptions.url;
+            if (isPresent(requestOptions.search)) {
+                var search = requestOptions.search.toString();
+                if (search.length > 0) {
+                    var prefix = '?';
+                    if (StringWrapper.contains(this.url, '?')) {
+                        prefix = (this.url[this.url.length - 1] == '&') ? '' : '&';
+                    }
+                    // TODO: just delete search-query-looking string in url?
+                    this.url = url + prefix + search;
+                }
+            }
+            this._body = requestOptions.body;
+            this.contentType = this.detectContentType();
+            this.method = normalizeMethodName(requestOptions.method);
+            // TODO(jeffbcross): implement behavior
+            // Defaults to 'omit', consistent with browser
+            // TODO(jeffbcross): implement behavior
+            this.headers = new Headers(requestOptions.headers);
+            this.withCredentials = requestOptions.withCredentials;
+        }
+        /**
+         * Returns the request's body as string, assuming that body exists. If body is undefined, return
+         * empty
+         * string.
+         */
+        Request.prototype.text = function () { return isPresent(this._body) ? this._body.toString() : ''; };
+        /**
+         * Returns the request's body as JSON string, assuming that body exists. If body is undefined,
+         * return
+         * empty
+         * string.
+         */
+        Request.prototype.json = function () { return isPresent(this._body) ? JSON.stringify(this._body) : ''; };
+        /**
+         * Returns the request's body as array buffer, assuming that body exists. If body is undefined,
+         * return
+         * null.
+         */
+        Request.prototype.arrayBuffer = function () {
+            if (this._body instanceof ArrayBuffer)
+                return this._body;
+            throw "The request body isn't an array buffer";
+        };
+        /**
+         * Returns the request's body as blob, assuming that body exists. If body is undefined, return
+         * null.
+         */
+        Request.prototype.blob = function () {
+            if (this._body instanceof Blob)
+                return this._body;
+            if (this._body instanceof ArrayBuffer)
+                return new Blob([this._body]);
+            throw "The request body isn't either a blob or an array buffer";
+        };
+        /**
+         * Returns the content type of request's body based on its type.
+         */
+        Request.prototype.detectContentType = function () {
+            if (this._body == null) {
+                return ContentType.NONE;
+            }
+            else if (this._body instanceof URLSearchParams) {
+                return ContentType.FORM;
+            }
+            else if (this._body instanceof FormData) {
+                return ContentType.FORM_DATA;
+            }
+            else if (this._body instanceof Blob) {
+                return ContentType.BLOB;
+            }
+            else if (this._body instanceof ArrayBuffer) {
+                return ContentType.ARRAY_BUFFER;
+            }
+            else if (this._body && typeof this._body == 'object') {
+                return ContentType.JSON;
+            }
+            else {
+                return ContentType.TEXT;
+            }
+        };
+        /**
+         * Returns the request's body according to its type. If body is undefined, return
+         * null.
+         */
+        Request.prototype.getBody = function () {
+            switch (this.contentType) {
+                case ContentType.JSON:
+                    return this.json();
+                case ContentType.FORM:
+                    return this.text();
+                case ContentType.FORM_DATA:
+                    return this._body;
+                case ContentType.TEXT:
+                    return this.text();
+                case ContentType.BLOB:
+                    return this.blob();
+                case ContentType.ARRAY_BUFFER:
+                    return this.arrayBuffer();
+                default:
+                    return null;
+            }
+        };
+        return Request;
+    }());
+    var noop$1 = function () { };
+    var w = typeof window == 'object' ? window : noop$1;
+    var FormData = w['FormData'] || noop$1;
+    var Blob = w['Blob'] || noop$1;
+    var ArrayBuffer = w['ArrayBuffer'] || noop$1;
     /**
      * Creates a request options object to be optionally provided when instantiating a
      * {@link Request}.
@@ -926,7 +1031,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      */
     var RequestOptions = (function () {
         function RequestOptions(_a) {
-            var _b = _a === void 0 ? {} : _a, method = _b.method, headers = _b.headers, body = _b.body, url = _b.url, search = _b.search;
+            var _b = _a === void 0 ? {} : _a, method = _b.method, headers = _b.headers, body = _b.body, url = _b.url, search = _b.search, withCredentials = _b.withCredentials;
             this.method = isPresent(method) ? normalizeMethodName(method) : null;
             this.headers = isPresent(headers) ? headers : null;
             this.body = isPresent(body) ? body : null;
@@ -934,6 +1039,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             this.search = isPresent(search) ? (isString(search) ? new URLSearchParams((search)) :
                 (search)) :
                 null;
+            this.withCredentials = isPresent(withCredentials) ? withCredentials : null;
         }
         /**
          * Creates a copy of the `RequestOptions` instance, using the optional input as values to override
@@ -969,7 +1075,10 @@ var __extends = (this && this.__extends) || function (d, b) {
                 search: isPresent(options) && isPresent(options.search) ?
                     (isString(options.search) ? new URLSearchParams((options.search)) :
                         (options.search).clone()) :
-                    this.search
+                    this.search,
+                withCredentials: isPresent(options) && isPresent(options.withCredentials) ?
+                    options.withCredentials :
+                    this.withCredentials
             });
         };
         return RequestOptions;
@@ -997,7 +1106,8 @@ var __extends = (this && this.__extends) || function (d, b) {
                 url: providedOpts.url || url,
                 search: providedOpts.search,
                 headers: providedOpts.headers,
-                body: providedOpts.body
+                body: providedOpts.body,
+                withCredentials: providedOpts.withCredentials
             }));
         }
         if (isPresent(method)) {
@@ -1170,6 +1280,9 @@ var __extends = (this && this.__extends) || function (d, b) {
         Response.prototype.arrayBuffer = function () {
             throw new BaseException('"arrayBuffer()" method not implemented on Response superclass');
         };
+        Response.prototype.toString = function () {
+            return "Response with status: " + this.status + " " + this.statusText + " for URL: " + this.url;
+        };
         return Response;
     }());
     /**
@@ -1283,6 +1396,9 @@ var __extends = (this && this.__extends) || function (d, b) {
             this.response = new rxjs_Observable.Observable(function (responseObserver) {
                 var _xhr = browserXHR.build();
                 _xhr.open(exports.RequestMethod[req.method].toUpperCase(), req.url);
+                if (isPresent(req.withCredentials)) {
+                    _xhr.withCredentials = req.withCredentials;
+                }
                 // load event handler
                 var onLoad = function () {
                     // responseText is the old-school way of retrieving response (supported by IE8 & 9)
@@ -1309,7 +1425,8 @@ var __extends = (this && this.__extends) || function (d, b) {
                         responseOptions = baseResponseOptions.merge(responseOptions);
                     }
                     var response = new Response(responseOptions);
-                    if (isSuccess(status)) {
+                    response.ok = isSuccess(status);
+                    if (response.ok) {
                         responseObserver.next(response);
                         // TODO(gdi2290): defer complete if array buffer until done
                         responseObserver.complete();
@@ -1325,12 +1442,13 @@ var __extends = (this && this.__extends) || function (d, b) {
                     }
                     responseObserver.error(new Response(responseOptions));
                 };
+                _this.setDetectedContentType(req, _xhr);
                 if (isPresent(req.headers)) {
                     req.headers.forEach(function (values, name) { return _xhr.setRequestHeader(name, values.join(',')); });
                 }
                 _xhr.addEventListener('load', onLoad);
                 _xhr.addEventListener('error', onError);
-                _xhr.send(_this.request.text());
+                _xhr.send(_this.request.getBody());
                 return function () {
                     _xhr.removeEventListener('load', onLoad);
                     _xhr.removeEventListener('error', onError);
@@ -1338,14 +1456,66 @@ var __extends = (this && this.__extends) || function (d, b) {
                 };
             });
         }
+        XHRConnection.prototype.setDetectedContentType = function (req, _xhr) {
+            // Skip if a custom Content-Type header is provided
+            if (isPresent(req.headers) && isPresent(req.headers['Content-Type'])) {
+                return;
+            }
+            // Set the detected content type
+            switch (req.contentType) {
+                case ContentType.NONE:
+                    break;
+                case ContentType.JSON:
+                    _xhr.setRequestHeader('Content-Type', 'application/json');
+                    break;
+                case ContentType.FORM:
+                    _xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+                    break;
+                case ContentType.TEXT:
+                    _xhr.setRequestHeader('Content-Type', 'text/plain');
+                    break;
+                case ContentType.BLOB:
+                    var blob = req.blob();
+                    if (blob.type) {
+                        _xhr.setRequestHeader('Content-Type', blob.type);
+                    }
+                    break;
+            }
+        };
         return XHRConnection;
     }());
+    /**
+     * `XSRFConfiguration` sets up Cross Site Request Forgery (XSRF) protection for the application
+     * using a cookie. See https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF) for more
+     * information on XSRF.
+     *
+     * Applications can configure custom cookie and header names by binding an instance of this class
+     * with different `cookieName` and `headerName` values. See the main HTTP documentation for more
+     * details.
+     */
+    var CookieXSRFStrategy = (function () {
+        function CookieXSRFStrategy(_cookieName, _headerName) {
+            if (_cookieName === void 0) { _cookieName = 'XSRF-TOKEN'; }
+            if (_headerName === void 0) { _headerName = 'X-XSRF-TOKEN'; }
+            this._cookieName = _cookieName;
+            this._headerName = _headerName;
+        }
+        CookieXSRFStrategy.prototype.configureRequest = function (req) {
+            var xsrfToken = _angular_platformBrowser.__platform_browser_private__.getDOM().getCookie(this._cookieName);
+            if (xsrfToken && !req.headers.has(this._headerName)) {
+                req.headers.set(this._headerName, xsrfToken);
+            }
+        };
+        return CookieXSRFStrategy;
+    }());
     var XHRBackend = (function () {
-        function XHRBackend(_browserXHR, _baseResponseOptions) {
+        function XHRBackend(_browserXHR, _baseResponseOptions, _xsrfStrategy) {
             this._browserXHR = _browserXHR;
             this._baseResponseOptions = _baseResponseOptions;
+            this._xsrfStrategy = _xsrfStrategy;
         }
         XHRBackend.prototype.createConnection = function (request) {
+            this._xsrfStrategy.configureRequest(request);
             return new XHRConnection(request, this._browserXHR, this._baseResponseOptions);
         };
         return XHRBackend;
@@ -1356,6 +1526,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     XHRBackend.ctorParameters = [
         { type: BrowserXhr, },
         { type: ResponseOptions, },
+        { type: XSRFStrategy, },
     ];
     var _nextRequestId = 0;
     var JSONP_HOME = '__ng_jsonp__';
@@ -1571,6 +1742,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * The providers included in `HTTP_PROVIDERS` include:
      *  * {@link Http}
      *  * {@link XHRBackend}
+     *  * {@link XSRFStrategy} - Bound to {@link CookieXSRFStrategy} class (see below)
      *  * `BrowserXHR` - Private factory to create `XMLHttpRequest` instances
      *  * {@link RequestOptions} - Bound to {@link BaseRequestOptions} class
      *  * {@link ResponseOptions} - Bound to {@link BaseResponseOptions} class
@@ -1591,7 +1763,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      *   search: string = 'coreTeam=true';
      * }
      *
-     * bootstrap(App, [HTTP_PROVIDERS, provide(RequestOptions, {useClass: MyOptions})])
+     * bootstrap(App, [HTTP_PROVIDERS, {provide: RequestOptions, useClass: MyOptions}])
      *   .catch(err => console.error(err));
      * ```
      *
@@ -1611,7 +1783,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * var injector = Injector.resolveAndCreate([
      *   HTTP_PROVIDERS,
      *   MockBackend,
-     *   provide(XHRBackend, {useExisting: MockBackend})
+     *   {provide: XHRBackend, useExisting: MockBackend}
      * ]);
      * var http = injector.get(Http);
      * var backend = injector.get(MockBackend);
@@ -1634,19 +1806,45 @@ var __extends = (this && this.__extends) || function (d, b) {
      *   }
      * });
      * ```
+     *
+     * `XSRFStrategy` allows customizing how the application protects itself against Cross Site Request
+     * Forgery (XSRF) attacks. By default, Angular will look for a cookie called `'XSRF-TOKEN'`, and set
+     * an HTTP request header called `'X-XSRF-TOKEN'` with the value of the cookie on each request,
+     * allowing the server side to validate that the request comes from its own front end.
+     *
+     * Applications can override the names used by configuring a different `XSRFStrategy` instance. Most
+     * commonly, applications will configure a `CookieXSRFStrategy` with different cookie or header
+     * names, but if needed, they can supply a completely custom implementation.
+     *
+     * See the security documentation for more information.
+     *
+     * ### Example
+     *
+     * ```
+     * import {provide} from '@angular/core';
+     * import {bootstrap} from '@angular/platform-browser/browser';
+     * import {HTTP_PROVIDERS, XSRFStrategy, CookieXSRFStrategy} from '@angular/http';
+     *
+     * bootstrap(
+     *     App,
+     *     [HTTP_PROVIDERS, {provide: XSRFStrategy,
+     *         useValue: new CookieXSRFStrategy('MY-XSRF-COOKIE-NAME', 'X-MY-XSRF-HEADER-NAME')}])
+     *   .catch(err => console.error(err));
+     * ```
      */
     var HTTP_PROVIDERS = [
         // TODO(pascal): use factory type annotations once supported in DI
         // issue: https://github.com/angular/angular/issues/3183
-        _angular_core.provide(Http, {
-            useFactory: function (xhrBackend, requestOptions) { return new Http(xhrBackend, requestOptions); },
-            deps: [XHRBackend, RequestOptions]
-        }),
+        { provide: Http, useFactory: httpFactory, deps: [XHRBackend, RequestOptions] },
         BrowserXhr,
-        _angular_core.provide(RequestOptions, { useClass: BaseRequestOptions }),
-        _angular_core.provide(ResponseOptions, { useClass: BaseResponseOptions }),
-        XHRBackend
+        { provide: RequestOptions, useClass: BaseRequestOptions },
+        { provide: ResponseOptions, useClass: BaseResponseOptions },
+        XHRBackend,
+        { provide: XSRFStrategy, useValue: new CookieXSRFStrategy() },
     ];
+    function httpFactory(xhrBackend, requestOptions) {
+        return new Http(xhrBackend, requestOptions);
+    }
     /**
      * See {@link HTTP_PROVIDERS} instead.
      *
@@ -1718,7 +1916,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      *   search: string = 'coreTeam=true';
      * }
      *
-     * bootstrap(App, [JSONP_PROVIDERS, provide(RequestOptions, {useClass: MyOptions})])
+     * bootstrap(App, [JSONP_PROVIDERS, {provide: RequestOptions, useClass: MyOptions}])
      *   .catch(err => console.error(err));
      * ```
      *
@@ -1736,7 +1934,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * var injector = Injector.resolveAndCreate([
      *   JSONP_PROVIDERS,
      *   MockBackend,
-     *   provide(JSONPBackend, {useExisting: MockBackend})
+     *   {provide: JSONPBackend, useExisting: MockBackend}
      * ]);
      * var jsonp = injector.get(Jsonp);
      * var backend = injector.get(MockBackend);
@@ -1763,15 +1961,15 @@ var __extends = (this && this.__extends) || function (d, b) {
     var JSONP_PROVIDERS = [
         // TODO(pascal): use factory type annotations once supported in DI
         // issue: https://github.com/angular/angular/issues/3183
-        _angular_core.provide(Jsonp, {
-            useFactory: function (jsonpBackend, requestOptions) { return new Jsonp(jsonpBackend, requestOptions); },
-            deps: [JSONPBackend, RequestOptions]
-        }),
+        { provide: Jsonp, useFactory: jsonpFactory, deps: [JSONPBackend, RequestOptions] },
         BrowserJsonp,
-        _angular_core.provide(RequestOptions, { useClass: BaseRequestOptions }),
-        _angular_core.provide(ResponseOptions, { useClass: BaseResponseOptions }),
-        _angular_core.provide(JSONPBackend, { useClass: JSONPBackend_ })
+        { provide: RequestOptions, useClass: BaseRequestOptions },
+        { provide: ResponseOptions, useClass: BaseResponseOptions },
+        { provide: JSONPBackend, useClass: JSONPBackend_ },
     ];
+    function jsonpFactory(jsonpBackend, requestOptions) {
+        return new Jsonp(jsonpBackend, requestOptions);
+    }
     /**
      * See {@link JSONP_PROVIDERS} instead.
      *
@@ -1786,6 +1984,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     exports.Response = Response;
     exports.Connection = Connection;
     exports.ConnectionBackend = ConnectionBackend;
+    exports.XSRFStrategy = XSRFStrategy;
     exports.BrowserXhr = BrowserXhr;
     exports.BaseRequestOptions = BaseRequestOptions;
     exports.RequestOptions = RequestOptions;
@@ -1793,6 +1992,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     exports.ResponseOptions = ResponseOptions;
     exports.XHRBackend = XHRBackend;
     exports.XHRConnection = XHRConnection;
+    exports.CookieXSRFStrategy = CookieXSRFStrategy;
     exports.JSONPBackend = JSONPBackend;
     exports.JSONPConnection = JSONPConnection;
     exports.Http = Http;

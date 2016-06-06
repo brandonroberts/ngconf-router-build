@@ -36,9 +36,11 @@ import { UrlChangeListener, PlatformLocation } from './platform_location';
  *
  * bootstrap(AppCmp, [
  *   ROUTER_PROVIDERS,
- *   provide(LocationStrategy, {useClass: HashLocationStrategy})
+ *   {provide: LocationStrategy, useClass: HashLocationStrategy}
  * ]);
  * ```
+ *
+ * @stable
  */
 export declare class HashLocationStrategy extends LocationStrategy {
     private _platformLocation;

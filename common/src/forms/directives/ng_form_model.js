@@ -5,10 +5,10 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var core_1 = require('@angular/core');
-var lang_1 = require('../../../src/facade/lang');
-var collection_1 = require('../../../src/facade/collection');
-var exceptions_1 = require('../../../src/facade/exceptions');
-var async_1 = require('../../../src/facade/async');
+var lang_1 = require('../../facade/lang');
+var collection_1 = require('../../facade/collection');
+var exceptions_1 = require('../../facade/exceptions');
+var async_1 = require('../../facade/async');
 var control_container_1 = require('./control_container');
 var shared_1 = require('./shared');
 var validators_1 = require('../validators');
@@ -23,6 +23,7 @@ var NgFormModel = (function (_super) {
         _super.call(this);
         this._validators = _validators;
         this._asyncValidators = _asyncValidators;
+        this._submitted = false;
         this.form = null;
         this.directives = [];
         this.ngSubmit = new async_1.EventEmitter();
@@ -38,6 +39,11 @@ var NgFormModel = (function (_super) {
         }
         this._updateDomValue();
     };
+    Object.defineProperty(NgFormModel.prototype, "submitted", {
+        get: function () { return this._submitted; },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(NgFormModel.prototype, "formDirective", {
         get: function () { return this; },
         enumerable: true,
@@ -75,6 +81,7 @@ var NgFormModel = (function (_super) {
         ctrl.updateValue(value);
     };
     NgFormModel.prototype.onSubmit = function () {
+        this._submitted = true;
         async_1.ObservableWrapper.callEmit(this.ngSubmit, null);
         return false;
     };

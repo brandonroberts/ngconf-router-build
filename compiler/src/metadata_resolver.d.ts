@@ -1,4 +1,4 @@
-import { Provider, QueryMetadata } from '@angular/core';
+import { AnimationMetadata, AnimationEntryMetadata, AnimationStateMetadata, AnimationStyleMetadata, Provider, QueryMetadata } from '@angular/core';
 import { ReflectorReader } from '../core_private';
 import { Type } from '../src/facade/lang';
 import * as cpl from './compile_metadata';
@@ -18,6 +18,10 @@ export declare class CompileMetadataResolver {
     private _reflector;
     constructor(_directiveResolver: DirectiveResolver, _pipeResolver: PipeResolver, _viewResolver: ViewResolver, _platformDirectives: Type[], _platformPipes: Type[], _reflector?: ReflectorReader);
     private sanitizeTokenName(token);
+    getAnimationEntryMetadata(entry: AnimationEntryMetadata): cpl.CompileAnimationEntryMetadata;
+    getAnimationStateMetadata(value: AnimationStateMetadata): cpl.CompileAnimationStateMetadata;
+    getAnimationStyleMetadata(value: AnimationStyleMetadata): cpl.CompileAnimationStyleMetadata;
+    getAnimationMetadata(value: AnimationMetadata): cpl.CompileAnimationMetadata;
     getDirectiveMetadata(directiveType: Type): cpl.CompileDirectiveMetadata;
     /**
      * @param someType a symbol which may or may not be a directive type
@@ -35,6 +39,6 @@ export declare class CompileMetadataResolver {
     getProviderMetadata(provider: Provider): cpl.CompileProviderMetadata;
     getQueriesMetadata(queries: {
         [key: string]: QueryMetadata;
-    }, isViewQuery: boolean): cpl.CompileQueryMetadata[];
-    getQueryMetadata(q: QueryMetadata, propertyName: string): cpl.CompileQueryMetadata;
+    }, isViewQuery: boolean, directiveType: Type): cpl.CompileQueryMetadata[];
+    getQueryMetadata(q: QueryMetadata, propertyName: string, typeOrFunc: Type | Function): cpl.CompileQueryMetadata;
 }

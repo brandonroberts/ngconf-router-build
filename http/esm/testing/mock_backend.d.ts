@@ -50,6 +50,16 @@ export declare class MockConnection implements Connection {
      * Emits the provided error object as an error to the {@link Response} {@link EventEmitter}
      * returned
      * from {@link Http}.
+     *
+     * ### Example
+     *
+     * ```
+     * var connection;
+     * backend.connections.subscribe(c => connection = c);
+     * http.request('data.json').subscribe(res => res, err => console.log(err)));
+     * connection.mockError(new Error('error'));
+     * ```
+     *
      */
     mockError(err?: Error): void;
 }
@@ -68,9 +78,9 @@ export declare class MockConnection implements Connection {
  *   var connection;
  *   var injector = Injector.resolveAndCreate([
  *     MockBackend,
- *     provide(Http, {useFactory: (backend, options) => {
+ *     {provide: Http, useFactory: (backend, options) => {
  *       return new Http(backend, options);
- *     }, deps: [MockBackend, BaseRequestOptions]})]);
+ *     }, deps: [MockBackend, BaseRequestOptions]}]);
  *   var http = injector.get(Http);
  *   var backend = injector.get(MockBackend);
  *   //Assign any newly-created connection to local variable
@@ -94,16 +104,16 @@ export declare class MockBackend implements ConnectionBackend {
      * ### Example
      *
      * ```
-     * import {Http, BaseRequestOptions} from '@angular/http';
+     * import {Http, BaseRequestOptions, Response} from '@angular/http';
      * import {MockBackend} from '@angular/http/testing';
-     * import {Injector} from '@angular/core';
+     * import {Injector, provide} from '@angular/core';
      *
      * it('should get a response', () => {
      *   var connection; //this will be set when a new connection is emitted from the backend.
      *   var text; //this will be set from mock response
      *   var injector = Injector.resolveAndCreate([
      *     MockBackend,
-     *     provide(Http, {useFactory: (backend, options) => {
+     *     {provide: Http, useFactory: (backend, options) => {
      *       return new Http(backend, options);
      *     }, deps: [MockBackend, BaseRequestOptions]}]);
      *   var backend = injector.get(MockBackend);

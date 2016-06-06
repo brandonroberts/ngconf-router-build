@@ -1,8 +1,8 @@
 import { OpaqueToken } from '@angular/core';
-import { isBlank, isPresent, isString } from '../../src/facade/lang';
-import { PromiseWrapper } from '../../src/facade/promise';
-import { ObservableWrapper } from '../../src/facade/async';
-import { StringMapWrapper } from '../../src/facade/collection';
+import { isBlank, isPresent, isString } from '../facade/lang';
+import { PromiseWrapper } from '../facade/promise';
+import { ObservableWrapper } from '../facade/async';
+import { StringMapWrapper } from '../facade/collection';
 /**
  * Providers for validators to be used for {@link Control}s in a form.
  *
@@ -11,6 +11,7 @@ import { StringMapWrapper } from '../../src/facade/collection';
  * ### Example
  *
  * {@example core/forms/ts/ng_validators/ng_validators.ts region='ng_validators'}
+ * @experimental
  */
 export const NG_VALIDATORS = new OpaqueToken("NgValidators");
 /**
@@ -20,6 +21,8 @@ export const NG_VALIDATORS = new OpaqueToken("NgValidators");
  * Provide this using `multi: true` to add validators.
  *
  * See {@link NG_VALIDATORS} for more details.
+ *
+ * @experimental
  */
 export const NG_ASYNC_VALIDATORS = 
 /*@ts2dart_const*/ new OpaqueToken("NgAsyncValidators");
@@ -34,6 +37,8 @@ export const NG_ASYNC_VALIDATORS =
  * ```typescript
  * var loginControl = new Control("", Validators.required)
  * ```
+ *
+ * @experimental
  */
 export class Validators {
     /**

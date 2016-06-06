@@ -1,4 +1,4 @@
-import { Type } from '../../src/facade/lang';
+import { Type } from '../facade/lang';
 export declare function getDOM(): DomAdapter;
 export declare function setDOM(adapter: DomAdapter): void;
 export declare function setRootDomAdapter(adapter: DomAdapter): void;
@@ -127,8 +127,12 @@ export declare abstract class DomAdapter {
     abstract setGlobalVar(name: string, value: any): any;
     abstract requestAnimationFrame(callback: any): number;
     abstract cancelAnimationFrame(id: any): any;
+    abstract supportsWebAnimation(): boolean;
     abstract performanceNow(): number;
     abstract getAnimationPrefix(): string;
     abstract getTransitionEnd(): string;
     abstract supportsAnimation(): boolean;
+    abstract supportsCookies(): boolean;
+    abstract getCookie(name: string): string;
+    abstract setCookie(name: string, value: string): any;
 }

@@ -1,5 +1,5 @@
-import { ApplicationRef, Injector, Provider, Type } from '@angular/core';
-import * as angular from './angular_js';
+import { ApplicationRef, Injector, Provider, Type } from "@angular/core";
+import * as angular from "./angular_js";
 /**
  * Use `UpgradeAdapter` to allow AngularJS v1 and Angular v2 to coexist in a single application.
  *
@@ -269,7 +269,7 @@ export declare class UpgradeAdapter {
      * adapter.bootstrap(document.body, ['myExample']);
      *```
      */
-    addProvider(provider: Type | Provider | any[]): void;
+    addProvider(provider: Type | Provider | any[] | any): void;
     /**
      * Allows AngularJS v1 service to be accessible from Angular v2.
      *

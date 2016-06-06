@@ -1,5 +1,5 @@
 "use strict";
-var lang_1 = require('../../src/facade/lang');
+var lang_1 = require('../facade/lang');
 /**
  * Describes the current state of the change detector.
  */
@@ -25,6 +25,7 @@ var ChangeDetectorState = exports.ChangeDetectorState;
 /**
  * Describes within the change detector which strategy will be used the next time change
  * detection is triggered.
+ * @stable
  */
 (function (ChangeDetectionStrategy) {
     /**

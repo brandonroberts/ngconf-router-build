@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Renderer, forwardRef, Input, Injector, Injectable } from '@angular/core';
-import { isPresent } from '../../../src/facade/lang';
-import { ListWrapper } from '../../../src/facade/collection';
+import { isPresent } from '../../facade/lang';
+import { ListWrapper } from '../../facade/collection';
 import { NG_VALUE_ACCESSOR } from './control_value_accessor';
 import { NgControl } from './ng_control';
 export const RADIO_VALUE_ACCESSOR = {
@@ -26,10 +26,14 @@ export class RadioControlRegistry {
     }
     select(accessor) {
         this._accessors.forEach((c) => {
-            if (c[0].control.root === accessor._control.control.root && c[1] !== accessor) {
+            if (this._isSameGroup(c, accessor) && c[1] !== accessor) {
                 c[1].fireUncheck();
             }
         });
+    }
+    _isSameGroup(controlPair, accessor) {
+        return controlPair[0].control.root === accessor._control.control.root &&
+            controlPair[1].name === accessor.name;
     }
 }
 RadioControlRegistry.decorators = [
@@ -37,6 +41,8 @@ RadioControlRegistry.decorators = [
 ];
 /**
  * The value provided by the forms API for radio buttons.
+ *
+ * @experimental
  */
 export class RadioButtonState {
     constructor(checked, value) {

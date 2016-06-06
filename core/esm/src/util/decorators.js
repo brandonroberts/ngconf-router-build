@@ -1,4 +1,4 @@
-import { global, isFunction, stringify } from '../../src/facade/lang';
+import { global, isFunction, stringify } from '../facade/lang';
 var _nextClassId = 0;
 function extractAnnotation(annotation) {
     if (isFunction(annotation) && annotation.hasOwnProperty('annotation')) {
@@ -129,6 +129,7 @@ function applyParams(fnOrArray, key) {
  *   }
  * });
  * ```
+ * @stable
  */
 export function Class(clsDef) {
     var constructor = applyParams(clsDef.hasOwnProperty('constructor') ? clsDef.constructor : undefined, 'constructor');

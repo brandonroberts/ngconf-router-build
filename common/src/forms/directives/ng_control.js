@@ -4,13 +4,15 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var exceptions_1 = require('../../../src/facade/exceptions');
+var exceptions_1 = require('../../facade/exceptions');
 var abstract_control_directive_1 = require('./abstract_control_directive');
 /**
  * A base class that all control directive extend.
  * It binds a {@link Control} object to a DOM element.
  *
  * Used internally by Angular forms.
+ *
+ * @experimental
  */
 var NgControl = (function (_super) {
     __extends(NgControl, _super);

@@ -1,9 +1,9 @@
 "use strict";
 var core_1 = require('@angular/core');
-var lang_1 = require('../../src/facade/lang');
-var promise_1 = require('../../src/facade/promise');
-var async_1 = require('../../src/facade/async');
-var collection_1 = require('../../src/facade/collection');
+var lang_1 = require('../facade/lang');
+var promise_1 = require('../facade/promise');
+var async_1 = require('../facade/async');
+var collection_1 = require('../facade/collection');
 /**
  * Providers for validators to be used for {@link Control}s in a form.
  *
@@ -12,6 +12,7 @@ var collection_1 = require('../../src/facade/collection');
  * ### Example
  *
  * {@example core/forms/ts/ng_validators/ng_validators.ts region='ng_validators'}
+ * @experimental
  */
 exports.NG_VALIDATORS = new core_1.OpaqueToken("NgValidators");
 /**
@@ -21,6 +22,8 @@ exports.NG_VALIDATORS = new core_1.OpaqueToken("NgValidators");
  * Provide this using `multi: true` to add validators.
  *
  * See {@link NG_VALIDATORS} for more details.
+ *
+ * @experimental
  */
 exports.NG_ASYNC_VALIDATORS = 
 /*@ts2dart_const*/ new core_1.OpaqueToken("NgAsyncValidators");
@@ -35,6 +38,8 @@ exports.NG_ASYNC_VALIDATORS =
  * ```typescript
  * var loginControl = new Control("", Validators.required)
  * ```
+ *
+ * @experimental
  */
 var Validators = (function () {
     function Validators() {

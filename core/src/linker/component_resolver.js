@@ -4,15 +4,16 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var lang_1 = require('../../src/facade/lang');
-var exceptions_1 = require('../../src/facade/exceptions');
-var async_1 = require('../../src/facade/async');
+var lang_1 = require('../facade/lang');
+var exceptions_1 = require('../facade/exceptions');
+var async_1 = require('../facade/async');
 var reflection_1 = require('../reflection/reflection');
 var component_factory_1 = require('./component_factory');
 var decorators_1 = require('../di/decorators');
 /**
  * Low-level service for loading {@link ComponentFactory}s, which
  * can later be used to create and render a Component instance.
+ * @experimental
  */
 var ComponentResolver = (function () {
     function ComponentResolver() {

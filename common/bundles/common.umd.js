@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v$$ANGULAR_VERSION$$
+ * @license AngularJS v2.0.0-rc.1
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -426,10 +426,17 @@ var __extends = (this && this.__extends) || function (d, b) {
      * }
      * ```
      *
-     * Use Rx.Observable but provides an adapter to make it work as specified here:
+     * The events payload can be accessed by the parameter `$event` on the components output event handler:
+     *
+     * ```
+     * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
+     * ```
+     *
+     * Uses Rx.Observable but provides an adapter to make it work as specified here:
      * https://github.com/jhusain/observable-spec
      *
      * Once a reference implementation of the spec is available, switch to it.
+     * @stable
      */
     var EventEmitter$1 = (function (_super) {
         __extends(EventEmitter$1, _super);
@@ -438,7 +445,7 @@ var __extends = (this && this.__extends) || function (d, b) {
          * delivers events synchronously or asynchronously.
          */
         function EventEmitter$1(isAsync) {
-            if (isAsync === void 0) { isAsync = true; }
+            if (isAsync === void 0) { isAsync = false; }
             _super.call(this);
             this.__isAsync = isAsync;
         }
@@ -801,6 +808,9 @@ var __extends = (this && this.__extends) || function (d, b) {
             };
         }
     })();
+    /**
+     * @stable
+     */
     var BaseException = (function (_super) {
         __extends(BaseException, _super);
         function BaseException(message) {
@@ -825,9 +835,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     var ObservableStrategy = (function () {
         function ObservableStrategy() {
         }
-        ObservableStrategy.prototype.createSubscription = function (async, updateLatestValue, onError) {
-            if (onError === void 0) { onError = function (e) { throw e; }; }
-            return ObservableWrapper.subscribe(async, updateLatestValue, onError);
+        ObservableStrategy.prototype.createSubscription = function (async, updateLatestValue) {
+            return ObservableWrapper.subscribe(async, updateLatestValue, function (e) { throw e; });
         };
         ObservableStrategy.prototype.dispose = function (subscription) { ObservableWrapper.dispose(subscription); };
         ObservableStrategy.prototype.onDestroy = function (subscription) { ObservableWrapper.dispose(subscription); };
@@ -836,9 +845,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     var PromiseStrategy = (function () {
         function PromiseStrategy() {
         }
-        PromiseStrategy.prototype.createSubscription = function (async, updateLatestValue, onError) {
-            if (onError === void 0) { onError = function (e) { throw e; }; }
-            return async.then(updateLatestValue, onError);
+        PromiseStrategy.prototype.createSubscription = function (async, updateLatestValue) {
+            return async.then(updateLatestValue, function (e) { throw e; });
         };
         PromiseStrategy.prototype.dispose = function (subscription) { };
         PromiseStrategy.prototype.onDestroy = function (subscription) { };
@@ -864,17 +872,17 @@ var __extends = (this && this.__extends) || function (d, b) {
                 this._dispose();
             }
         };
-        AsyncPipe.prototype.transform = function (obj, onError) {
+        AsyncPipe.prototype.transform = function (obj) {
             if (isBlank(this._obj)) {
                 if (isPresent(obj)) {
-                    this._subscribe(obj, onError);
+                    this._subscribe(obj);
                 }
                 this._latestReturnedValue = this._latestValue;
                 return this._latestValue;
             }
             if (obj !== this._obj) {
                 this._dispose();
-                return this.transform(obj, onError);
+                return this.transform(obj);
             }
             if (this._latestValue === this._latestReturnedValue) {
                 return this._latestReturnedValue;
@@ -885,11 +893,11 @@ var __extends = (this && this.__extends) || function (d, b) {
             }
         };
         /** @internal */
-        AsyncPipe.prototype._subscribe = function (obj, onError) {
+        AsyncPipe.prototype._subscribe = function (obj) {
             var _this = this;
             this._obj = obj;
             this._strategy = this._selectStrategy(obj);
-            this._subscription = this._strategy.createSubscription(obj, function (value) { return _this._updateLatestValue(obj, value); }, onError);
+            this._subscription = this._strategy.createSubscription(obj, function (value) { return _this._updateLatestValue(obj, value); });
         };
         /** @internal */
         AsyncPipe.prototype._selectStrategy = function (obj) {
@@ -952,79 +960,155 @@ var __extends = (this && this.__extends) || function (d, b) {
         };
         return NumberFormatter;
     }());
-    function digitCondition(len) {
-        return len == 2 ? '2-digit' : 'numeric';
+    var DATE_FORMATS_SPLIT = /((?:[^yMLdHhmsaZEwGjJ']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|L+|d+|H+|h+|J+|j+|m+|s+|a|Z|G+|w+))(.*)/;
+    var PATTERN_ALIASES = {
+        yMMMdjms: datePartGetterFactory(combine([
+            digitCondition('year', 1),
+            nameCondition('month', 3),
+            digitCondition('day', 1),
+            digitCondition('hour', 1),
+            digitCondition('minute', 1),
+            digitCondition('second', 1),
+        ])),
+        yMdjm: datePartGetterFactory(combine([
+            digitCondition('year', 1),
+            digitCondition('month', 1),
+            digitCondition('day', 1),
+            digitCondition('hour', 1),
+            digitCondition('minute', 1)
+        ])),
+        yMMMMEEEEd: datePartGetterFactory(combine([
+            digitCondition('year', 1),
+            nameCondition('month', 4),
+            nameCondition('weekday', 4),
+            digitCondition('day', 1)
+        ])),
+        yMMMMd: datePartGetterFactory(combine([digitCondition('year', 1), nameCondition('month', 4), digitCondition('day', 1)])),
+        yMMMd: datePartGetterFactory(combine([digitCondition('year', 1), nameCondition('month', 3), digitCondition('day', 1)])),
+        yMd: datePartGetterFactory(combine([digitCondition('year', 1), digitCondition('month', 1), digitCondition('day', 1)])),
+        jms: datePartGetterFactory(combine([digitCondition('hour', 1), digitCondition('second', 1), digitCondition('minute', 1)])),
+        jm: datePartGetterFactory(combine([digitCondition('hour', 1), digitCondition('minute', 1)]))
+    };
+    var DATE_FORMATS = {
+        yyyy: datePartGetterFactory(digitCondition('year', 4)),
+        yy: datePartGetterFactory(digitCondition('year', 2)),
+        y: datePartGetterFactory(digitCondition('year', 1)),
+        MMMM: datePartGetterFactory(nameCondition('month', 4)),
+        MMM: datePartGetterFactory(nameCondition('month', 3)),
+        MM: datePartGetterFactory(digitCondition('month', 2)),
+        M: datePartGetterFactory(digitCondition('month', 1)),
+        LLLL: datePartGetterFactory(nameCondition('month', 4)),
+        dd: datePartGetterFactory(digitCondition('day', 2)),
+        d: datePartGetterFactory(digitCondition('day', 1)),
+        HH: hourExtracter(datePartGetterFactory(hour12Modify(digitCondition('hour', 2), false))),
+        H: hourExtracter(datePartGetterFactory(hour12Modify(digitCondition('hour', 1), false))),
+        hh: hourExtracter(datePartGetterFactory(hour12Modify(digitCondition('hour', 2), true))),
+        h: hourExtracter(datePartGetterFactory(hour12Modify(digitCondition('hour', 1), true))),
+        jj: datePartGetterFactory(digitCondition('hour', 2)),
+        j: datePartGetterFactory(digitCondition('hour', 1)),
+        mm: datePartGetterFactory(digitCondition('minute', 2)),
+        m: datePartGetterFactory(digitCondition('minute', 1)),
+        ss: datePartGetterFactory(digitCondition('second', 2)),
+        s: datePartGetterFactory(digitCondition('second', 1)),
+        // while ISO 8601 requires fractions to be prefixed with `.` or `,`
+        // we can be just safely rely on using `sss` since we currently don't support single or two digit
+        // fractions
+        sss: datePartGetterFactory(digitCondition('second', 3)),
+        EEEE: datePartGetterFactory(nameCondition('weekday', 4)),
+        EEE: datePartGetterFactory(nameCondition('weekday', 3)),
+        EE: datePartGetterFactory(nameCondition('weekday', 2)),
+        E: datePartGetterFactory(nameCondition('weekday', 1)),
+        a: hourClockExtracter(datePartGetterFactory(hour12Modify(digitCondition('hour', 1), true))),
+        Z: datePartGetterFactory({ timeZoneName: 'long' }),
+        z: datePartGetterFactory({ timeZoneName: 'short' }),
+        ww: datePartGetterFactory({}),
+        // first Thursday of the year. not support ?
+        w: datePartGetterFactory({}),
+        // of the year not support ?
+        G: datePartGetterFactory(nameCondition('era', 1)),
+        GG: datePartGetterFactory(nameCondition('era', 2)),
+        GGG: datePartGetterFactory(nameCondition('era', 3)),
+        GGGG: datePartGetterFactory(nameCondition('era', 4))
+    };
+    function hourClockExtracter(inner) {
+        return function (date, locale) {
+            var result = inner(date, locale);
+            return result.split(' ')[1];
+        };
     }
-    function nameCondition(len) {
-        return len < 4 ? 'short' : 'long';
+    function hourExtracter(inner) {
+        return function (date, locale) {
+            var result = inner(date, locale);
+            return result.split(' ')[0];
+        };
     }
-    function extractComponents(pattern) {
-        var ret = {};
-        var i = 0, j;
-        while (i < pattern.length) {
-            j = i;
-            while (j < pattern.length && pattern[j] == pattern[i])
-                j++;
-            var len = j - i;
-            switch (pattern[i]) {
-                case 'G':
-                    ret.era = nameCondition(len);
-                    break;
-                case 'y':
-                    ret.year = digitCondition(len);
-                    break;
-                case 'M':
-                    if (len >= 3)
-                        ret.month = nameCondition(len);
-                    else
-                        ret.month = digitCondition(len);
-                    break;
-                case 'd':
-                    ret.day = digitCondition(len);
-                    break;
-                case 'E':
-                    ret.weekday = nameCondition(len);
-                    break;
-                case 'j':
-                    ret.hour = digitCondition(len);
-                    break;
-                case 'h':
-                    ret.hour = digitCondition(len);
-                    ret.hour12 = true;
-                    break;
-                case 'H':
-                    ret.hour = digitCondition(len);
-                    ret.hour12 = false;
-                    break;
-                case 'm':
-                    ret.minute = digitCondition(len);
-                    break;
-                case 's':
-                    ret.second = digitCondition(len);
-                    break;
-                case 'z':
-                    ret.timeZoneName = 'long';
-                    break;
-                case 'Z':
-                    ret.timeZoneName = 'short';
-                    break;
-            }
-            i = j;
+    function hour12Modify(options, value) {
+        options.hour12 = value;
+        return options;
+    }
+    function digitCondition(prop, len) {
+        var result = {};
+        result[prop] = len == 2 ? '2-digit' : 'numeric';
+        return result;
+    }
+    function nameCondition(prop, len) {
+        var result = {};
+        result[prop] = len < 4 ? 'short' : 'long';
+        return result;
+    }
+    function combine(options) {
+        var result = {};
+        options.forEach(function (option) { Object.assign(result, option); });
+        return result;
+    }
+    function datePartGetterFactory(ret) {
+        return function (date, locale) {
+            return new Intl.DateTimeFormat(locale, ret).format(date);
+        };
+    }
+    var datePartsFormatterCache = new Map();
+    function dateFormatter(format, date, locale) {
+        var text = '';
+        var match;
+        var fn;
+        var parts = [];
+        if (PATTERN_ALIASES[format]) {
+            return PATTERN_ALIASES[format](date, locale);
         }
-        return ret;
+        if (datePartsFormatterCache.has(format)) {
+            parts = datePartsFormatterCache.get(format);
+        }
+        else {
+            var matchs = DATE_FORMATS_SPLIT.exec(format);
+            while (format) {
+                match = DATE_FORMATS_SPLIT.exec(format);
+                if (match) {
+                    parts = concat(parts, match, 1);
+                    format = parts.pop();
+                }
+                else {
+                    parts.push(format);
+                    format = null;
+                }
+            }
+            datePartsFormatterCache.set(format, parts);
+        }
+        parts.forEach(function (part) {
+            fn = DATE_FORMATS[part];
+            text += fn ? fn(date, locale) :
+                part === "''" ? "'" : part.replace(/(^'|'$)/g, '').replace(/''/g, "'");
+        });
+        return text;
     }
-    var dateFormatterCache = new Map();
+    var slice = [].slice;
+    function concat(array1, array2, index) {
+        return array1.concat(slice.call(array2, index));
+    }
     var DateFormatter = (function () {
         function DateFormatter() {
         }
         DateFormatter.format = function (date, locale, pattern) {
-            var key = locale + pattern;
-            if (dateFormatterCache.has(key)) {
-                return dateFormatterCache.get(key).format(date);
-            }
-            var formatter = new Intl.DateTimeFormat(locale, extractComponents(pattern));
-            dateFormatterCache.set(key, formatter);
-            return formatter.format(date);
+            return dateFormatter(pattern, date, locale);
         };
         return DateFormatter;
     }());
@@ -1043,12 +1127,23 @@ var __extends = (this && this.__extends) || function (d, b) {
             if (isNumber(value)) {
                 value = DateWrapper.fromMillis(value);
             }
+            else if (isString(value)) {
+                value = DateWrapper.fromISOString(value);
+            }
             if (StringMapWrapper.contains(DatePipe._ALIASES, pattern)) {
                 pattern = StringMapWrapper.get(DatePipe._ALIASES, pattern);
             }
             return DateFormatter.format(value, defaultLocale, pattern);
         };
-        DatePipe.prototype.supports = function (obj) { return isDate(obj) || isNumber(obj); };
+        DatePipe.prototype.supports = function (obj) {
+            if (isDate(obj) || isNumber(obj)) {
+                return true;
+            }
+            if (isString(obj) && isDate(DateWrapper.fromISOString(obj))) {
+                return true;
+            }
+            return false;
+        };
         return DatePipe;
     }());
     /** @internal */
@@ -1074,18 +1169,17 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     JsonPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'json', pure: false },] },
-        { type: _angular_core.Injectable },
     ];
     var SlicePipe = (function () {
         function SlicePipe() {
         }
         SlicePipe.prototype.transform = function (value, start, end) {
             if (end === void 0) { end = null; }
+            if (isBlank(value))
+                return value;
             if (!this.supports(value)) {
                 throw new InvalidPipeArgumentException(SlicePipe, value);
             }
-            if (isBlank(value))
-                return value;
             if (isString(value)) {
                 return StringWrapper.slice(value, start, end);
             }
@@ -1096,7 +1190,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     SlicePipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'slice', pure: false },] },
-        { type: _angular_core.Injectable },
     ];
     var LowerCasePipe = (function () {
         function LowerCasePipe() {
@@ -1113,97 +1206,81 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     LowerCasePipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'lowercase' },] },
-        { type: _angular_core.Injectable },
     ];
     var defaultLocale$1 = 'en-US';
     var _re = RegExpWrapper.create('^(\\d+)?\\.((\\d+)(\\-(\\d+))?)?$');
-    var NumberPipe = (function () {
-        function NumberPipe() {
+    /**
+     * Internal function to format numbers used by Decimal, Percent and Date pipes.
+     */
+    function formatNumber(pipe, value, style, digits, currency, currencyAsSymbol) {
+        if (currency === void 0) { currency = null; }
+        if (currencyAsSymbol === void 0) { currencyAsSymbol = false; }
+        if (isBlank(value))
+            return null;
+        if (!isNumber(value)) {
+            throw new InvalidPipeArgumentException(pipe, value);
         }
-        /** @internal */
-        NumberPipe._format = function (value, style, digits, currency, currencyAsSymbol) {
-            if (currency === void 0) { currency = null; }
-            if (currencyAsSymbol === void 0) { currencyAsSymbol = false; }
-            if (isBlank(value))
-                return null;
-            if (!isNumber(value)) {
-                throw new InvalidPipeArgumentException(NumberPipe, value);
+        var minInt = 1, minFraction = 0, maxFraction = 3;
+        if (isPresent(digits)) {
+            var parts = RegExpWrapper.firstMatch(_re, digits);
+            if (isBlank(parts)) {
+                throw new BaseException(digits + " is not a valid digit info for number pipes");
             }
-            var minInt = 1, minFraction = 0, maxFraction = 3;
-            if (isPresent(digits)) {
-                var parts = RegExpWrapper.firstMatch(_re, digits);
-                if (isBlank(parts)) {
-                    throw new BaseException(digits + " is not a valid digit info for number pipes");
-                }
-                if (isPresent(parts[1])) {
-                    minInt = NumberWrapper.parseIntAutoRadix(parts[1]);
-                }
-                if (isPresent(parts[3])) {
-                    minFraction = NumberWrapper.parseIntAutoRadix(parts[3]);
-                }
-                if (isPresent(parts[5])) {
-                    maxFraction = NumberWrapper.parseIntAutoRadix(parts[5]);
-                }
+            if (isPresent(parts[1])) {
+                minInt = NumberWrapper.parseIntAutoRadix(parts[1]);
             }
-            return NumberFormatter.format(value, defaultLocale$1, style, {
-                minimumIntegerDigits: minInt,
-                minimumFractionDigits: minFraction,
-                maximumFractionDigits: maxFraction,
-                currency: currency,
-                currencyAsSymbol: currencyAsSymbol
-            });
-        };
-        return NumberPipe;
-    }());
-    NumberPipe.decorators = [
-        { type: _angular_core.Injectable },
-    ];
-    var DecimalPipe = (function (_super) {
-        __extends(DecimalPipe, _super);
+            if (isPresent(parts[3])) {
+                minFraction = NumberWrapper.parseIntAutoRadix(parts[3]);
+            }
+            if (isPresent(parts[5])) {
+                maxFraction = NumberWrapper.parseIntAutoRadix(parts[5]);
+            }
+        }
+        return NumberFormatter.format(value, defaultLocale$1, style, {
+            minimumIntegerDigits: minInt,
+            minimumFractionDigits: minFraction,
+            maximumFractionDigits: maxFraction,
+            currency: currency,
+            currencyAsSymbol: currencyAsSymbol
+        });
+    }
+    var DecimalPipe = (function () {
         function DecimalPipe() {
-            _super.apply(this, arguments);
         }
         DecimalPipe.prototype.transform = function (value, digits) {
             if (digits === void 0) { digits = null; }
-            return NumberPipe._format(value, NumberFormatStyle.Decimal, digits);
+            return formatNumber(DecimalPipe, value, NumberFormatStyle.Decimal, digits);
         };
         return DecimalPipe;
-    }(NumberPipe));
+    }());
     DecimalPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'number' },] },
-        { type: _angular_core.Injectable },
     ];
-    var PercentPipe = (function (_super) {
-        __extends(PercentPipe, _super);
+    var PercentPipe = (function () {
         function PercentPipe() {
-            _super.apply(this, arguments);
         }
         PercentPipe.prototype.transform = function (value, digits) {
             if (digits === void 0) { digits = null; }
-            return NumberPipe._format(value, NumberFormatStyle.Percent, digits);
+            return formatNumber(PercentPipe, value, NumberFormatStyle.Percent, digits);
         };
         return PercentPipe;
-    }(NumberPipe));
+    }());
     PercentPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'percent' },] },
-        { type: _angular_core.Injectable },
     ];
-    var CurrencyPipe = (function (_super) {
-        __extends(CurrencyPipe, _super);
+    var CurrencyPipe = (function () {
         function CurrencyPipe() {
-            _super.apply(this, arguments);
         }
         CurrencyPipe.prototype.transform = function (value, currencyCode, symbolDisplay, digits) {
             if (currencyCode === void 0) { currencyCode = 'USD'; }
             if (symbolDisplay === void 0) { symbolDisplay = false; }
             if (digits === void 0) { digits = null; }
-            return NumberPipe._format(value, NumberFormatStyle.Currency, digits, currencyCode, symbolDisplay);
+            return formatNumber(CurrencyPipe, value, NumberFormatStyle.Currency, digits, currencyCode, symbolDisplay);
         };
         return CurrencyPipe;
-    }(NumberPipe));
+    }());
     CurrencyPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'currency' },] },
-        { type: _angular_core.Injectable },
     ];
     var UpperCasePipe = (function () {
         function UpperCasePipe() {
@@ -1220,7 +1297,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     UpperCasePipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'uppercase' },] },
-        { type: _angular_core.Injectable },
     ];
     var ReplacePipe = (function () {
         function ReplacePipe() {
@@ -1282,7 +1358,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     I18nPluralPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'i18nPlural', pure: true },] },
-        { type: _angular_core.Injectable },
     ];
     var I18nSelectPipe = (function () {
         function I18nSelectPipe() {
@@ -1297,7 +1372,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     I18nSelectPipe.decorators = [
         { type: _angular_core.Pipe, args: [{ name: 'i18nSelect', pure: true },] },
-        { type: _angular_core.Injectable },
     ];
     /**
      * A collection of Angular core pipes that are likely to be used in each and every
@@ -1305,6 +1379,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      *
      * This collection can be used to quickly enumerate all the built-in pipes in the `pipes`
      * property of the `@Component` decorator.
+     *
+     * @experimental Contains i18n pipes which are experimental
      */
     var COMMON_PIPES = [
         AsyncPipe,
@@ -1824,6 +1900,9 @@ var __extends = (this && this.__extends) || function (d, b) {
         { type: NgSwitch, decorators: [{ type: _angular_core.Host },] },
     ];
     var _CATEGORY_DEFAULT = 'other';
+    /**
+     * @experimental
+     */
     var NgLocalization = (function () {
         function NgLocalization() {
         }
@@ -1950,6 +2029,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      *   ...
      * }
      * ```
+     *
+     * @stable
      */
     var CORE_DIRECTIVES = [
         NgClass,
@@ -2002,7 +2083,7 @@ var __extends = (this && this.__extends) || function (d, b) {
         return PromiseWrapper.isPromise(r) ? ObservableWrapper.fromPromise(r) : r;
     }
     /**
-     *
+     * @experimental
      */
     var AbstractControl = (function () {
         function AbstractControl(validator, asyncValidator) {
@@ -2221,6 +2302,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * validation function.
      *
      * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+     *
+     * @experimental
      */
     var Control = (function (_super) {
         __extends(Control, _super);
@@ -2280,6 +2363,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * controls, but is of variable length.
      *
      * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+     *
+     * @experimental
      */
     var ControlGroup = (function (_super) {
         __extends(ControlGroup, _super);
@@ -2388,6 +2473,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * as broken change detection.
      *
      * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+     *
+     * @experimental
      */
     var ControlArray = (function (_super) {
         __extends(ControlArray, _super);
@@ -2452,6 +2539,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * Base class for control directives.
      *
      * Only used internally in the forms module.
+     *
+     * @experimental
      */
     var AbstractControlDirective = (function () {
         function AbstractControlDirective() {
@@ -2509,6 +2598,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * A directive that contains multiple {@link NgControl}s.
      *
      * Only used by the forms module.
+     *
+     * @experimental
      */
     var ControlContainer = (function (_super) {
         __extends(ControlContainer, _super);
@@ -2538,6 +2629,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * It binds a {@link Control} object to a DOM element.
      *
      * Used internally by Angular forms.
+     *
+     * @experimental
      */
     var NgControl = (function (_super) {
         __extends(NgControl, _super);
@@ -2566,6 +2659,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * Used to provide a {@link ControlValueAccessor} for form controls.
      *
      * See {@link DefaultValueAccessor} for how to implement one.
+     * @experimental
      */
     var NG_VALUE_ACCESSOR = 
     /*@ts2dart_const*/ new _angular_core.OpaqueToken("NgValueAccessor");
@@ -2577,6 +2671,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * ### Example
      *
      * {@example core/forms/ts/ng_validators/ng_validators.ts region='ng_validators'}
+     * @experimental
      */
     var NG_VALIDATORS = new _angular_core.OpaqueToken("NgValidators");
     /**
@@ -2586,6 +2681,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * Provide this using `multi: true` to add validators.
      *
      * See {@link NG_VALIDATORS} for more details.
+     *
+     * @experimental
      */
     var NG_ASYNC_VALIDATORS = 
     /*@ts2dart_const*/ new _angular_core.OpaqueToken("NgAsyncValidators");
@@ -2600,6 +2697,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * ```typescript
      * var loginControl = new Control("", Validators.required)
      * ```
+     *
+     * @experimental
      */
     var Validators = (function () {
         function Validators() {
@@ -2831,7 +2930,10 @@ var __extends = (this && this.__extends) || function (d, b) {
         };
         SelectControlValueAccessor.prototype.registerOnChange = function (fn) {
             var _this = this;
-            this.onChange = function (valueString) { fn(_this._getOptionValue(valueString)); };
+            this.onChange = function (valueString) {
+                _this.value = valueString;
+                fn(_this._getOptionValue(valueString));
+            };
         };
         SelectControlValueAccessor.prototype.registerOnTouched = function (fn) { this.onTouched = fn; };
         /** @internal */
@@ -2854,7 +2956,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     }());
     SelectControlValueAccessor.decorators = [
         { type: _angular_core.Directive, args: [{
-                    selector: 'select[ngControl],select[ngFormControl],select[ngModel]',
+                    selector: 'select:not([multiple])[ngControl],select:not([multiple])[ngFormControl],select:not([multiple])[ngModel]',
                     host: { '(change)': 'onChange($event.target.value)', '(blur)': 'onTouched()' },
                     providers: [SELECT_VALUE_ACCESSOR]
                 },] },
@@ -2937,11 +3039,16 @@ var __extends = (this && this.__extends) || function (d, b) {
             ListWrapper.removeAt(this._accessors, indexToRemove);
         };
         RadioControlRegistry.prototype.select = function (accessor) {
+            var _this = this;
             this._accessors.forEach(function (c) {
-                if (c[0].control.root === accessor._control.control.root && c[1] !== accessor) {
+                if (_this._isSameGroup(c, accessor) && c[1] !== accessor) {
                     c[1].fireUncheck();
                 }
             });
+        };
+        RadioControlRegistry.prototype._isSameGroup = function (controlPair, accessor) {
+            return controlPair[0].control.root === accessor._control.control.root &&
+                controlPair[1].name === accessor.name;
         };
         return RadioControlRegistry;
     }());
@@ -2950,6 +3057,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     ];
     /**
      * The value provided by the forms API for radio buttons.
+     *
+     * @experimental
      */
     var RadioButtonState = (function () {
         function RadioButtonState(checked, value) {
@@ -3390,6 +3499,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             _super.call(this);
             this._validators = _validators;
             this._asyncValidators = _asyncValidators;
+            this._submitted = false;
             this.form = null;
             this.directives = [];
             this.ngSubmit = new EventEmitter$1();
@@ -3405,6 +3515,11 @@ var __extends = (this && this.__extends) || function (d, b) {
             }
             this._updateDomValue();
         };
+        Object.defineProperty(NgFormModel.prototype, "submitted", {
+            get: function () { return this._submitted; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(NgFormModel.prototype, "formDirective", {
             get: function () { return this; },
             enumerable: true,
@@ -3442,6 +3557,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             ctrl.updateValue(value);
         };
         NgFormModel.prototype.onSubmit = function () {
+            this._submitted = true;
             ObservableWrapper.callEmit(this.ngSubmit, null);
             return false;
         };
@@ -3480,9 +3596,15 @@ var __extends = (this && this.__extends) || function (d, b) {
         __extends(NgForm, _super);
         function NgForm(validators, asyncValidators) {
             _super.call(this);
+            this._submitted = false;
             this.ngSubmit = new EventEmitter$1();
             this.form = new ControlGroup({}, null, composeValidators(validators), composeAsyncValidators(asyncValidators));
         }
+        Object.defineProperty(NgForm.prototype, "submitted", {
+            get: function () { return this._submitted; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(NgForm.prototype, "formDirective", {
             get: function () { return this; },
             enumerable: true,
@@ -3555,6 +3677,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             });
         };
         NgForm.prototype.onSubmit = function () {
+            this._submitted = true;
             ObservableWrapper.callEmit(this.ngSubmit, null);
             return false;
         };
@@ -3644,6 +3767,162 @@ var __extends = (this && this.__extends) || function (d, b) {
     NgControlStatus.ctorParameters = [
         { type: NgControl, decorators: [{ type: _angular_core.Self },] },
     ];
+    var SELECT_MULTIPLE_VALUE_ACCESSOR = {
+        provide: NG_VALUE_ACCESSOR,
+        useExisting: _angular_core.forwardRef(function () { return SelectMultipleControlValueAccessor; }),
+        multi: true
+    };
+    function _buildValueString$1(id, value) {
+        if (isBlank(id))
+            return "" + value;
+        if (isString(value))
+            value = "'" + value + "'";
+        if (!isPrimitive(value))
+            value = "Object";
+        return StringWrapper.slice(id + ": " + value, 0, 50);
+    }
+    function _extractId$1(valueString) {
+        return valueString.split(":")[0];
+    }
+    var SelectMultipleControlValueAccessor = (function () {
+        function SelectMultipleControlValueAccessor() {
+            /** @internal */
+            this._optionMap = new Map();
+            /** @internal */
+            this._idCounter = 0;
+            this.onChange = function (_) { };
+            this.onTouched = function () { };
+        }
+        SelectMultipleControlValueAccessor.prototype.writeValue = function (value) {
+            var _this = this;
+            this.value = value;
+            if (value == null)
+                return;
+            var values = value;
+            // convert values to ids
+            var ids = values.map(function (v) { return _this._getOptionId(v); });
+            this._optionMap.forEach(function (opt, o) {
+                opt._setSelected(ids.indexOf(o.toString()) > -1);
+            });
+        };
+        SelectMultipleControlValueAccessor.prototype.registerOnChange = function (fn) {
+            var _this = this;
+            this.onChange = function (_) {
+                var selected = [];
+                if (_.hasOwnProperty('selectedOptions')) {
+                    var options = _.selectedOptions;
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options.item(i);
+                        var val = _this._getOptionValue(opt.value);
+                        selected.push(val);
+                    }
+                }
+                else {
+                    var options = _.options;
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options.item(i);
+                        if (opt.selected) {
+                            var val = _this._getOptionValue(opt.value);
+                            selected.push(val);
+                        }
+                    }
+                }
+                fn(selected);
+            };
+        };
+        SelectMultipleControlValueAccessor.prototype.registerOnTouched = function (fn) { this.onTouched = fn; };
+        /** @internal */
+        SelectMultipleControlValueAccessor.prototype._registerOption = function (value) {
+            var id = (this._idCounter++).toString();
+            this._optionMap.set(id, value);
+            return id;
+        };
+        /** @internal */
+        SelectMultipleControlValueAccessor.prototype._getOptionId = function (value) {
+            for (var _i = 0, _a = MapWrapper.keys(this._optionMap); _i < _a.length; _i++) {
+                var id = _a[_i];
+                if (looseIdentical(this._optionMap.get(id)._value, value))
+                    return id;
+            }
+            return null;
+        };
+        /** @internal */
+        SelectMultipleControlValueAccessor.prototype._getOptionValue = function (valueString) {
+            var opt = this._optionMap.get(_extractId$1(valueString));
+            return isPresent(opt) ? opt._value : valueString;
+        };
+        return SelectMultipleControlValueAccessor;
+    }());
+    SelectMultipleControlValueAccessor.decorators = [
+        { type: _angular_core.Directive, args: [{
+                    selector: 'select[multiple][ngControl],select[multiple][ngFormControl],select[multiple][ngModel]',
+                    host: { '(input)': 'onChange($event.target)', '(blur)': 'onTouched()' },
+                    providers: [SELECT_MULTIPLE_VALUE_ACCESSOR]
+                },] },
+    ];
+    SelectMultipleControlValueAccessor.ctorParameters = [];
+    var NgSelectMultipleOption = (function () {
+        function NgSelectMultipleOption(_element, _renderer, _select) {
+            this._element = _element;
+            this._renderer = _renderer;
+            this._select = _select;
+            if (isPresent(this._select)) {
+                this.id = this._select._registerOption(this);
+            }
+        }
+        Object.defineProperty(NgSelectMultipleOption.prototype, "ngValue", {
+            set: function (value) {
+                if (this._select == null)
+                    return;
+                this._value = value;
+                this._setElementValue(_buildValueString$1(this.id, value));
+                this._select.writeValue(this._select.value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(NgSelectMultipleOption.prototype, "value", {
+            set: function (value) {
+                if (isPresent(this._select)) {
+                    this._value = value;
+                    this._setElementValue(_buildValueString$1(this.id, value));
+                    this._select.writeValue(this._select.value);
+                }
+                else {
+                    this._setElementValue(value);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /** @internal */
+        NgSelectMultipleOption.prototype._setElementValue = function (value) {
+            this._renderer.setElementProperty(this._element.nativeElement, 'value', value);
+        };
+        /** @internal */
+        NgSelectMultipleOption.prototype._setSelected = function (selected) {
+            this._renderer.setElementProperty(this._element.nativeElement, 'selected', selected);
+        };
+        NgSelectMultipleOption.prototype.ngOnDestroy = function () {
+            if (isPresent(this._select)) {
+                this._select._optionMap.delete(this.id);
+                this._select.writeValue(this._select.value);
+            }
+        };
+        return NgSelectMultipleOption;
+    }());
+    NgSelectMultipleOption.decorators = [
+        { type: _angular_core.Directive, args: [{ selector: 'option' },] },
+    ];
+    NgSelectMultipleOption.ctorParameters = [
+        { type: _angular_core.ElementRef, },
+        { type: _angular_core.Renderer, },
+        { type: SelectMultipleControlValueAccessor, decorators: [{ type: _angular_core.Optional }, { type: _angular_core.Host },] },
+    ];
+    NgSelectMultipleOption.propDecorators = {
+        'ngValue': [{ type: _angular_core.Input, args: ['ngValue',] },],
+        'value': [{ type: _angular_core.Input, args: ['value',] },],
+    };
     var REQUIRED = Validators.required;
     var REQUIRED_VALIDATOR = {
         provide: NG_VALIDATORS,
@@ -3717,18 +3996,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     MaxLengthValidator.ctorParameters = [
         { type: undefined, decorators: [{ type: _angular_core.Attribute, args: ["maxlength",] },] },
     ];
-    /**
-     * A Directive that adds the `pattern` validator to any controls marked with the
-     * `pattern` attribute, via the {@link NG_VALIDATORS} binding. Uses attribute value
-     * as the regex to validate Control value against.  Follows pattern attribute
-     * semantics; i.e. regex must match entire Control value.
-     *
-     * ### Example
-     *
-     * ```
-     * <input [ngControl]="fullName" pattern="[a-zA-Z ]*">
-     * ```
-     */
     var PATTERN_VALIDATOR = {
         provide: NG_VALIDATORS,
         useExisting: _angular_core.forwardRef(function () { return PatternValidator; }),
@@ -3765,6 +4032,7 @@ var __extends = (this && this.__extends) || function (d, b) {
      * })
      * class MyApp {}
      * ```
+     * @experimental
      */
     var FORM_DIRECTIVES = [
         NgControlName,
@@ -3774,10 +4042,12 @@ var __extends = (this && this.__extends) || function (d, b) {
         NgFormModel,
         NgForm,
         NgSelectOption,
+        NgSelectMultipleOption,
         DefaultValueAccessor,
         NumberValueAccessor,
         CheckboxControlValueAccessor,
         SelectControlValueAccessor,
+        SelectMultipleControlValueAccessor,
         RadioControlValueAccessor,
         NgControlStatus,
         RequiredValidator,
@@ -3860,14 +4130,10 @@ var __extends = (this && this.__extends) || function (d, b) {
      * ```typescript
      * bootstrap(MyApp, [FORM_PROVIDERS]);
      * ```
+     *
+     * @experimental
      */
     var FORM_PROVIDERS = [FormBuilder, RadioControlRegistry];
-    /**
-     * See {@link FORM_PROVIDERS} instead.
-     *
-     * @deprecated
-     */
-    var FORM_BINDINGS = FORM_PROVIDERS;
     /**
      * A collection of Angular core directives that are likely to be used in each and every Angular
      * application. This includes core directives (e.g., NgIf and NgFor), and forms directives (e.g.,
@@ -3910,6 +4176,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      *   ...
      * }
      * ```
+     *
+     * @experimental Contains forms which are experimental.
      */
     var COMMON_DIRECTIVES = [CORE_DIRECTIVES, FORM_DIRECTIVES];
     /**
@@ -3935,6 +4203,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * {@link Location} / {@link LocationStrategy} and DOM apis flow through the `PlatformLocation`
      * class
      * they are all platform independent.
+     *
+     * @stable
      */
     var PlatformLocation = (function () {
         function PlatformLocation() {
@@ -3971,6 +4241,8 @@ var __extends = (this && this.__extends) || function (d, b) {
      * `http://example.com/foo` as an equivalent URL.
      *
      * See these two classes for more.
+     *
+     * @stable
      */
     var LocationStrategy = (function () {
         function LocationStrategy() {
@@ -4002,27 +4274,28 @@ var __extends = (this && this.__extends) || function (d, b) {
      *
      * bootstrap(AppCmp, [
      *   ROUTER_PROVIDERS,
-     *   provide(APP_BASE_HREF, {useValue: '/my/app'})
+     *   {provide: APP_BASE_HREF, useValue: '/my/app'}
      * ]);
      * ```
+     * @stable
      */
     var APP_BASE_HREF = new _angular_core.OpaqueToken('appBaseHref');
     var Location = (function () {
         function Location(platformStrategy) {
             var _this = this;
-            this.platformStrategy = platformStrategy;
             /** @internal */
             this._subject = new _angular_core.EventEmitter();
-            var browserBaseHref = this.platformStrategy.getBaseHref();
+            this._platformStrategy = platformStrategy;
+            var browserBaseHref = this._platformStrategy.getBaseHref();
             this._baseHref = Location.stripTrailingSlash(_stripIndexHtml(browserBaseHref));
-            this.platformStrategy.onPopState(function (ev) {
+            this._platformStrategy.onPopState(function (ev) {
                 ObservableWrapper.callEmit(_this._subject, { 'url': _this.path(), 'pop': true, 'type': ev.type });
             });
         }
         /**
          * Returns the normalized URL path.
          */
-        Location.prototype.path = function () { return this.normalize(this.platformStrategy.path()); };
+        Location.prototype.path = function () { return this.normalize(this._platformStrategy.path()); };
         /**
          * Normalizes the given path and compares to the current normalized path.
          */
@@ -4047,7 +4320,7 @@ var __extends = (this && this.__extends) || function (d, b) {
             if (url.length > 0 && !url.startsWith('/')) {
                 url = '/' + url;
             }
-            return this.platformStrategy.prepareExternalUrl(url);
+            return this._platformStrategy.prepareExternalUrl(url);
         };
         // TODO: rename this method to pushState
         /**
@@ -4056,7 +4329,7 @@ var __extends = (this && this.__extends) || function (d, b) {
          */
         Location.prototype.go = function (path, query) {
             if (query === void 0) { query = ''; }
-            this.platformStrategy.pushState(null, '', path, query);
+            this._platformStrategy.pushState(null, '', path, query);
         };
         /**
          * Changes the browsers URL to the normalized version of the given URL, and replaces
@@ -4064,16 +4337,16 @@ var __extends = (this && this.__extends) || function (d, b) {
          */
         Location.prototype.replaceState = function (path, query) {
             if (query === void 0) { query = ''; }
-            this.platformStrategy.replaceState(null, '', path, query);
+            this._platformStrategy.replaceState(null, '', path, query);
         };
         /**
          * Navigates forward in the platform's history.
          */
-        Location.prototype.forward = function () { this.platformStrategy.forward(); };
+        Location.prototype.forward = function () { this._platformStrategy.forward(); };
         /**
          * Navigates back in the platform's history.
          */
-        Location.prototype.back = function () { this.platformStrategy.back(); };
+        Location.prototype.back = function () { this._platformStrategy.back(); };
         /**
          * Subscribe to the platform's `popState` events.
          */
@@ -4248,7 +4521,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     exports.JsonPipe = JsonPipe;
     exports.SlicePipe = SlicePipe;
     exports.LowerCasePipe = LowerCasePipe;
-    exports.NumberPipe = NumberPipe;
     exports.DecimalPipe = DecimalPipe;
     exports.PercentPipe = PercentPipe;
     exports.CurrencyPipe = CurrencyPipe;
@@ -4270,7 +4542,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     exports.NgLocalization = NgLocalization;
     exports.CORE_DIRECTIVES = CORE_DIRECTIVES;
     exports.FORM_PROVIDERS = FORM_PROVIDERS;
-    exports.FORM_BINDINGS = FORM_BINDINGS;
     exports.AbstractControl = AbstractControl;
     exports.Control = Control;
     exports.ControlGroup = ControlGroup;

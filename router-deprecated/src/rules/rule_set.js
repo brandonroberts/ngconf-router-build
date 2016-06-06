@@ -1,8 +1,8 @@
 "use strict";
-var lang_1 = require('../../src/facade/lang');
-var exceptions_1 = require('../../src/facade/exceptions');
-var collection_1 = require('../../src/facade/collection');
-var async_1 = require('../../src/facade/async');
+var lang_1 = require('../facade/lang');
+var exceptions_1 = require('../facade/exceptions');
+var collection_1 = require('../facade/collection');
+var async_1 = require('../facade/async');
 var rules_1 = require('./rules');
 var route_config_impl_1 = require('../route_config/route_config_impl');
 var async_route_handler_1 = require('./route_handlers/async_route_handler');
@@ -132,7 +132,7 @@ var RuleSet = (function () {
     RuleSet.prototype._getRoutePath = function (config) {
         if (lang_1.isPresent(config.regex)) {
             if (lang_1.isFunction(config.serializer)) {
-                return new regex_route_path_1.RegexRoutePath(config.regex, config.serializer);
+                return new regex_route_path_1.RegexRoutePath(config.regex, config.serializer, config.regex_group_names);
             }
             else {
                 throw new exceptions_1.BaseException("Route provides a regex property, '" + config.regex + "', but no serializer property");

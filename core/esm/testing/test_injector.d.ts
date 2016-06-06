@@ -5,9 +5,9 @@ export declare class TestInjector {
     private _injector;
     private _providers;
     reset(): void;
-    platformProviders: Array<Type | Provider | any[]>;
-    applicationProviders: Array<Type | Provider | any[]>;
-    addProviders(providers: Array<Type | Provider | any[]>): void;
+    platformProviders: Array<Type | Provider | any[] | any>;
+    applicationProviders: Array<Type | Provider | any[] | any>;
+    addProviders(providers: Array<Type | Provider | any[] | any>): void;
     createInjector(): ReflectiveInjector;
     get(token: any): any;
     execute(tokens: any[], fn: Function): any;
@@ -58,12 +58,12 @@ export declare class InjectSetupWrapper {
     constructor(_providers: () => any);
     private _addProviders();
     inject(tokens: any[], fn: Function): Function;
-    /** @Deprecated {use async(withProviders().inject())} */
+    /** @deprecated {use async(withProviders().inject())} */
     injectAsync(tokens: any[], fn: Function): Function;
 }
 export declare function withProviders(providers: () => any): InjectSetupWrapper;
 /**
- * @Deprecated {use async(inject())}
+ * @deprecated {use async(inject())}
  *
  * Allows injecting dependencies in `beforeEach()` and `it()`. The test must return
  * a promise which will resolve when all asynchronous activity is complete.

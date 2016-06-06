@@ -4,8 +4,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var collection_1 = require('../../src/facade/collection');
-var lang_1 = require('../../src/facade/lang');
+var collection_1 = require('../facade/collection');
+var lang_1 = require('../facade/lang');
 var generic_browser_adapter_1 = require('./generic_browser_adapter');
 var dom_adapter_1 = require('../dom/dom_adapter');
 var _attrToPropMap = {
@@ -363,6 +363,7 @@ var BrowserDomAdapter = (function (_super) {
     BrowserDomAdapter.prototype.setGlobalVar = function (path, value) { lang_1.setValueOnPath(lang_1.global, path, value); };
     BrowserDomAdapter.prototype.requestAnimationFrame = function (callback) { return window.requestAnimationFrame(callback); };
     BrowserDomAdapter.prototype.cancelAnimationFrame = function (id) { window.cancelAnimationFrame(id); };
+    BrowserDomAdapter.prototype.supportsWebAnimation = function () { return lang_1.isFunction(document.body['animate']); };
     BrowserDomAdapter.prototype.performanceNow = function () {
         // performance.now() is not available in all browsers, see
         // http://caniuse.com/#search=performance.now
@@ -372,6 +373,15 @@ var BrowserDomAdapter = (function (_super) {
         else {
             return lang_1.DateWrapper.toMillis(lang_1.DateWrapper.now());
         }
+    };
+    BrowserDomAdapter.prototype.supportsCookies = function () { return true; };
+    BrowserDomAdapter.prototype.getCookie = function (name) {
+        return parseCookieValue(document.cookie, name);
+    };
+    BrowserDomAdapter.prototype.setCookie = function (name, value) {
+        // document.cookie is magical, assigning into it assigns/overrides one cookie value, but does
+        // not clear other cookies.
+        document.cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
     };
     return BrowserDomAdapter;
 }(generic_browser_adapter_1.GenericBrowserDomAdapter));
@@ -396,4 +406,17 @@ function relativePath(url) {
     return (urlParsingNode.pathname.charAt(0) === '/') ? urlParsingNode.pathname :
         '/' + urlParsingNode.pathname;
 }
+function parseCookieValue(cookie, name) {
+    name = encodeURIComponent(name);
+    var cookies = cookie.split(';');
+    for (var _i = 0, cookies_1 = cookies; _i < cookies_1.length; _i++) {
+        var cookie_1 = cookies_1[_i];
+        var _a = cookie_1.split('=', 2), key = _a[0], value = _a[1];
+        if (key.trim() === name) {
+            return decodeURIComponent(value);
+        }
+    }
+    return null;
+}
+exports.parseCookieValue = parseCookieValue;
 //# sourceMappingURL=browser_adapter.js.map

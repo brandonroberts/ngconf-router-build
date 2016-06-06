@@ -1,4 +1,7 @@
 "use strict";
+/**
+ * @stable
+ */
 (function (LifecycleHooks) {
     LifecycleHooks[LifecycleHooks["OnInit"] = 0] = "OnInit";
     LifecycleHooks[LifecycleHooks["OnDestroy"] = 1] = "OnDestroy";
@@ -50,7 +53,7 @@ exports.LIFECYCLE_HOOKS_VALUES = [
  * class MyComponent implements OnChanges {
  *   @Input() myProp: any;
  *
- *   ngOnChanges(changes: {[propName: string]: SimpleChange}) {
+ *   ngOnChanges(changes: SimpleChanges) {
  *     console.log('ngOnChanges - myProp = ' + changes['myProp'].currentValue);
  *   }
  * }
@@ -68,6 +71,7 @@ exports.LIFECYCLE_HOOKS_VALUES = [
  *
  * bootstrap(App).catch(err => console.error(err));
  * ```
+ * @stable
  */
 var OnChanges = (function () {
     function OnChanges() {
@@ -115,6 +119,7 @@ exports.OnChanges = OnChanges;
  *
  * bootstrap(App).catch(err => console.error(err));
  *  ```
+ * @stable
  */
 var OnInit = (function () {
     function OnInit() {
@@ -123,22 +128,19 @@ var OnInit = (function () {
 }());
 exports.OnInit = OnInit;
 /**
- * Implement this interface to override the default change detection algorithm for your directive.
+ * Implement this interface to supplement the default change detection algorithm in your directive.
  *
- * `ngDoCheck` gets called to check the changes in the directives instead of the default algorithm.
+ * `ngDoCheck` gets called to check the changes in the directives in addition to the default algorithm.
  *
  * The default change detection algorithm looks for differences by comparing bound-property values
- * by reference across change detection runs. When `DoCheck` is implemented, the default algorithm
- * is disabled and `ngDoCheck` is responsible for checking for changes.
+ * by reference across change detection runs.
  *
- * Implementing this interface allows improving performance by using insights about the component,
- * its implementation and data types of its properties.
+ * Note that a directive typically should not use both `DoCheck` and {@link OnChanges} to respond to
+ * changes on the same input. `ngOnChanges` will continue to be called when the default change detector
+ * detects changes, so it is usually unnecessary to respond to changes on the same input in both hooks.
+ * Reaction to the changes have to be handled from within the `ngDoCheck` callback.
  *
- * Note that a directive should not implement both `DoCheck` and {@link OnChanges} at the same time.
- * `ngOnChanges` would not be called when a directive implements `DoCheck`. Reaction to the changes
- * have to be handled from within the `ngDoCheck` callback.
- *
- * Use {@link KeyValueDiffers} and {@link IterableDiffers} to add your custom check mechanisms.
+ * You can use {@link KeyValueDiffers} and {@link IterableDiffers} to help add your custom check mechanisms.
  *
  * ### Example ([live demo](http://plnkr.co/edit/QpnIlF0CR2i5bcYbHEUJ?p=preview))
  *
@@ -186,6 +188,7 @@ exports.OnInit = OnInit;
  *   list = [];
  * }
  * ```
+ * @stable
  */
 var DoCheck = (function () {
     function DoCheck() {
@@ -281,6 +284,7 @@ exports.DoCheck = DoCheck;
  * Invoking `{{ 10000 | countdown }}` would cause the value to be decremented by 50,
  * every 50ms, until it reaches 0.
  *
+ * @stable
  */
 var OnDestroy = (function () {
     function OnDestroy() {
@@ -338,6 +342,7 @@ exports.OnDestroy = OnDestroy;
  *
  * bootstrap(App).catch(err => console.error(err));
  * ```
+ * @stable
  */
 var AfterContentInit = (function () {
     function AfterContentInit() {
@@ -390,6 +395,7 @@ exports.AfterContentInit = AfterContentInit;
  *
  * bootstrap(App).catch(err => console.error(err));
  * ```
+ * @stable
  */
 var AfterContentChecked = (function () {
     function AfterContentChecked() {
@@ -441,6 +447,7 @@ exports.AfterContentChecked = AfterContentChecked;
  *
  * bootstrap(App).catch(err => console.error(err));
  * ```
+ * @stable
  */
 var AfterViewInit = (function () {
     function AfterViewInit() {
@@ -495,6 +502,7 @@ exports.AfterViewInit = AfterViewInit;
  *
  * bootstrap(App).catch(err => console.error(err));
  * ```
+ * @stable
  */
 var AfterViewChecked = (function () {
     function AfterViewChecked() {

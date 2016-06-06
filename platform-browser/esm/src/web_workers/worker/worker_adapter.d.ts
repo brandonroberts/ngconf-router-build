@@ -1,4 +1,4 @@
-import { Type } from '../../../src/facade/lang';
+import { Type } from '../../facade/lang';
 import { DomAdapter } from '../../dom/dom_adapter';
 /**
  * This adapter is required to log error messages.
@@ -125,4 +125,8 @@ export declare class WorkerDomAdapter extends DomAdapter {
     getAnimationPrefix(): string;
     getTransitionEnd(): string;
     supportsAnimation(): boolean;
+    supportsWebAnimation(): boolean;
+    supportsCookies(): boolean;
+    getCookie(name: string): string;
+    setCookie(name: string, value: string): void;
 }

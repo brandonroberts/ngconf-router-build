@@ -1,5 +1,5 @@
-import { Type, isBlank, isPresent, isArray } from '../../src/facade/lang';
-import { MapWrapper, ListWrapper } from '../../src/facade/collection';
+import { Type, isBlank, isPresent, isArray } from '../facade/lang';
+import { MapWrapper, ListWrapper } from '../facade/collection';
 import { reflector } from '../reflection/reflection';
 import { ReflectiveKey } from './reflective_key';
 import { InjectMetadata, OptionalMetadata, SelfMetadata, HostMetadata, SkipSelfMetadata, DependencyMetadata } from './metadata';
@@ -34,6 +34,7 @@ export class ResolvedReflectiveProvider_ {
 }
 /**
  * An internal resolved representation of a factory function created by resolving {@link Provider}.
+ * @experimental
  */
 export class ResolvedReflectiveFactory {
     constructor(

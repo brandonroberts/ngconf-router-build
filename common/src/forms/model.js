@@ -4,10 +4,10 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var lang_1 = require('../../src/facade/lang');
-var async_1 = require('../../src/facade/async');
-var promise_1 = require('../../src/facade/promise');
-var collection_1 = require('../../src/facade/collection');
+var lang_1 = require('../facade/lang');
+var async_1 = require('../facade/async');
+var promise_1 = require('../facade/promise');
+var collection_1 = require('../facade/collection');
 /**
  * Indicates that a Control is valid, i.e. that no errors exist in the input value.
  */
@@ -51,7 +51,7 @@ function toObservable(r) {
     return promise_1.PromiseWrapper.isPromise(r) ? async_1.ObservableWrapper.fromPromise(r) : r;
 }
 /**
- *
+ * @experimental
  */
 var AbstractControl = (function () {
     function AbstractControl(validator, asyncValidator) {
@@ -271,6 +271,8 @@ exports.AbstractControl = AbstractControl;
  * validation function.
  *
  * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+ *
+ * @experimental
  */
 var Control = (function (_super) {
     __extends(Control, _super);
@@ -331,6 +333,8 @@ exports.Control = Control;
  * controls, but is of variable length.
  *
  * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+ *
+ * @experimental
  */
 var ControlGroup = (function (_super) {
     __extends(ControlGroup, _super);
@@ -440,6 +444,8 @@ exports.ControlGroup = ControlGroup;
  * as broken change detection.
  *
  * ### Example ([live demo](http://plnkr.co/edit/23DESOpbNnBpBHZt1BR4?p=preview))
+ *
+ * @experimental
  */
 var ControlArray = (function (_super) {
     __extends(ControlArray, _super);

@@ -1,6 +1,6 @@
-import { RegExpWrapper, StringWrapper, isPresent, isBlank } from '../../../src/facade/lang';
-import { BaseException } from '../../../src/facade/exceptions';
-import { StringMapWrapper } from '../../../src/facade/collection';
+import { RegExpWrapper, StringWrapper, isPresent, isBlank } from '../../facade/lang';
+import { BaseException } from '../../facade/exceptions';
+import { StringMapWrapper } from '../../facade/collection';
 import { TouchMap, normalizeString } from '../../utils';
 import { RootUrl, convertUrlParamsToArray } from '../../url_parser';
 import { GeneratedUrl, MatchedUrl } from './route_path';
@@ -90,10 +90,10 @@ export class ParamRoutePath {
         var captured = [];
         for (var i = 0; i < this._segments.length; i += 1) {
             var pathSegment = this._segments[i];
-            currentUrlSegment = nextUrlSegment;
             if (pathSegment instanceof ContinuationPathSegment) {
                 break;
             }
+            currentUrlSegment = nextUrlSegment;
             if (isPresent(currentUrlSegment)) {
                 // the star segment consumes all of the remaining URL, including matrix params
                 if (pathSegment instanceof StarPathSegment) {

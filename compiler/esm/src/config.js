@@ -1,8 +1,9 @@
 import { isBlank } from '../src/facade/lang';
 import { unimplemented } from '../src/facade/exceptions';
 import { Identifiers } from './identifiers';
+import { ViewEncapsulation } from '@angular/core';
 export class CompilerConfig {
-    constructor(genDebugInfo, logBindingUpdate, useJit, renderTypes = null) {
+    constructor(genDebugInfo, logBindingUpdate, useJit, renderTypes = null, defaultEncapsulation = null) {
         this.genDebugInfo = genDebugInfo;
         this.logBindingUpdate = logBindingUpdate;
         this.useJit = useJit;
@@ -10,6 +11,10 @@ export class CompilerConfig {
             renderTypes = new DefaultRenderTypes();
         }
         this.renderTypes = renderTypes;
+        if (isBlank(defaultEncapsulation)) {
+            defaultEncapsulation = ViewEncapsulation.Emulated;
+        }
+        this.defaultEncapsulation = defaultEncapsulation;
     }
 }
 /**

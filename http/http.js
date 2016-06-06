@@ -1,25 +1,20 @@
 "use strict";
-/**
- * @module
- * @description
- * The http module provides services to perform http requests. To get started, see the {@link Http}
- * class.
- */
-var core_1 = require('@angular/core');
 var http_1 = require('./src/http');
 var xhr_backend_1 = require('./src/backends/xhr_backend');
 var jsonp_backend_1 = require('./src/backends/jsonp_backend');
 var browser_xhr_1 = require('./src/backends/browser_xhr');
 var browser_jsonp_1 = require('./src/backends/browser_jsonp');
 var base_request_options_1 = require('./src/base_request_options');
+var interfaces_1 = require('./src/interfaces');
 var base_response_options_1 = require('./src/base_response_options');
 var static_request_1 = require('./src/static_request');
 exports.Request = static_request_1.Request;
 var static_response_1 = require('./src/static_response');
 exports.Response = static_response_1.Response;
-var interfaces_1 = require('./src/interfaces');
-exports.Connection = interfaces_1.Connection;
-exports.ConnectionBackend = interfaces_1.ConnectionBackend;
+var interfaces_2 = require('./src/interfaces');
+exports.Connection = interfaces_2.Connection;
+exports.ConnectionBackend = interfaces_2.ConnectionBackend;
+exports.XSRFStrategy = interfaces_2.XSRFStrategy;
 var browser_xhr_2 = require('./src/backends/browser_xhr');
 exports.BrowserXhr = browser_xhr_2.BrowserXhr;
 var base_request_options_2 = require('./src/base_request_options');
@@ -31,6 +26,7 @@ exports.ResponseOptions = base_response_options_2.ResponseOptions;
 var xhr_backend_2 = require('./src/backends/xhr_backend');
 exports.XHRBackend = xhr_backend_2.XHRBackend;
 exports.XHRConnection = xhr_backend_2.XHRConnection;
+exports.CookieXSRFStrategy = xhr_backend_2.CookieXSRFStrategy;
 var jsonp_backend_2 = require('./src/backends/jsonp_backend');
 exports.JSONPBackend = jsonp_backend_2.JSONPBackend;
 exports.JSONPConnection = jsonp_backend_2.JSONPConnection;
@@ -98,6 +94,7 @@ exports.URLSearchParams = url_search_params_1.URLSearchParams;
  * The providers included in `HTTP_PROVIDERS` include:
  *  * {@link Http}
  *  * {@link XHRBackend}
+ *  * {@link XSRFStrategy} - Bound to {@link CookieXSRFStrategy} class (see below)
  *  * `BrowserXHR` - Private factory to create `XMLHttpRequest` instances
  *  * {@link RequestOptions} - Bound to {@link BaseRequestOptions} class
  *  * {@link ResponseOptions} - Bound to {@link BaseResponseOptions} class
@@ -118,7 +115,7 @@ exports.URLSearchParams = url_search_params_1.URLSearchParams;
  *   search: string = 'coreTeam=true';
  * }
  *
- * bootstrap(App, [HTTP_PROVIDERS, provide(RequestOptions, {useClass: MyOptions})])
+ * bootstrap(App, [HTTP_PROVIDERS, {provide: RequestOptions, useClass: MyOptions}])
  *   .catch(err => console.error(err));
  * ```
  *
@@ -138,7 +135,7 @@ exports.URLSearchParams = url_search_params_1.URLSearchParams;
  * var injector = Injector.resolveAndCreate([
  *   HTTP_PROVIDERS,
  *   MockBackend,
- *   provide(XHRBackend, {useExisting: MockBackend})
+ *   {provide: XHRBackend, useExisting: MockBackend}
  * ]);
  * var http = injector.get(Http);
  * var backend = injector.get(MockBackend);
@@ -161,21 +158,45 @@ exports.URLSearchParams = url_search_params_1.URLSearchParams;
  *   }
  * });
  * ```
+ *
+ * `XSRFStrategy` allows customizing how the application protects itself against Cross Site Request
+ * Forgery (XSRF) attacks. By default, Angular will look for a cookie called `'XSRF-TOKEN'`, and set
+ * an HTTP request header called `'X-XSRF-TOKEN'` with the value of the cookie on each request,
+ * allowing the server side to validate that the request comes from its own front end.
+ *
+ * Applications can override the names used by configuring a different `XSRFStrategy` instance. Most
+ * commonly, applications will configure a `CookieXSRFStrategy` with different cookie or header
+ * names, but if needed, they can supply a completely custom implementation.
+ *
+ * See the security documentation for more information.
+ *
+ * ### Example
+ *
+ * ```
+ * import {provide} from '@angular/core';
+ * import {bootstrap} from '@angular/platform-browser/browser';
+ * import {HTTP_PROVIDERS, XSRFStrategy, CookieXSRFStrategy} from '@angular/http';
+ *
+ * bootstrap(
+ *     App,
+ *     [HTTP_PROVIDERS, {provide: XSRFStrategy,
+ *         useValue: new CookieXSRFStrategy('MY-XSRF-COOKIE-NAME', 'X-MY-XSRF-HEADER-NAME')}])
+ *   .catch(err => console.error(err));
+ * ```
  */
 exports.HTTP_PROVIDERS = [
     // TODO(pascal): use factory type annotations once supported in DI
     // issue: https://github.com/angular/angular/issues/3183
-    core_1.provide(http_1.Http, {
-        useFactory: function (xhrBackend, requestOptions) {
-            return new http_1.Http(xhrBackend, requestOptions);
-        },
-        deps: [xhr_backend_1.XHRBackend, base_request_options_1.RequestOptions]
-    }),
+    { provide: http_1.Http, useFactory: httpFactory, deps: [xhr_backend_1.XHRBackend, base_request_options_1.RequestOptions] },
     browser_xhr_1.BrowserXhr,
-    core_1.provide(base_request_options_1.RequestOptions, { useClass: base_request_options_1.BaseRequestOptions }),
-    core_1.provide(base_response_options_1.ResponseOptions, { useClass: base_response_options_1.BaseResponseOptions }),
-    xhr_backend_1.XHRBackend
+    { provide: base_request_options_1.RequestOptions, useClass: base_request_options_1.BaseRequestOptions },
+    { provide: base_response_options_1.ResponseOptions, useClass: base_response_options_1.BaseResponseOptions },
+    xhr_backend_1.XHRBackend,
+    { provide: interfaces_1.XSRFStrategy, useValue: new xhr_backend_1.CookieXSRFStrategy() },
 ];
+function httpFactory(xhrBackend, requestOptions) {
+    return new http_1.Http(xhrBackend, requestOptions);
+}
 /**
  * See {@link HTTP_PROVIDERS} instead.
  *
@@ -247,7 +268,7 @@ exports.HTTP_BINDINGS = exports.HTTP_PROVIDERS;
  *   search: string = 'coreTeam=true';
  * }
  *
- * bootstrap(App, [JSONP_PROVIDERS, provide(RequestOptions, {useClass: MyOptions})])
+ * bootstrap(App, [JSONP_PROVIDERS, {provide: RequestOptions, useClass: MyOptions}])
  *   .catch(err => console.error(err));
  * ```
  *
@@ -265,7 +286,7 @@ exports.HTTP_BINDINGS = exports.HTTP_PROVIDERS;
  * var injector = Injector.resolveAndCreate([
  *   JSONP_PROVIDERS,
  *   MockBackend,
- *   provide(JSONPBackend, {useExisting: MockBackend})
+ *   {provide: JSONPBackend, useExisting: MockBackend}
  * ]);
  * var jsonp = injector.get(Jsonp);
  * var backend = injector.get(MockBackend);
@@ -292,17 +313,15 @@ exports.HTTP_BINDINGS = exports.HTTP_PROVIDERS;
 exports.JSONP_PROVIDERS = [
     // TODO(pascal): use factory type annotations once supported in DI
     // issue: https://github.com/angular/angular/issues/3183
-    core_1.provide(http_1.Jsonp, {
-        useFactory: function (jsonpBackend, requestOptions) {
-            return new http_1.Jsonp(jsonpBackend, requestOptions);
-        },
-        deps: [jsonp_backend_1.JSONPBackend, base_request_options_1.RequestOptions]
-    }),
+    { provide: http_1.Jsonp, useFactory: jsonpFactory, deps: [jsonp_backend_1.JSONPBackend, base_request_options_1.RequestOptions] },
     browser_jsonp_1.BrowserJsonp,
-    core_1.provide(base_request_options_1.RequestOptions, { useClass: base_request_options_1.BaseRequestOptions }),
-    core_1.provide(base_response_options_1.ResponseOptions, { useClass: base_response_options_1.BaseResponseOptions }),
-    core_1.provide(jsonp_backend_1.JSONPBackend, { useClass: jsonp_backend_1.JSONPBackend_ })
+    { provide: base_request_options_1.RequestOptions, useClass: base_request_options_1.BaseRequestOptions },
+    { provide: base_response_options_1.ResponseOptions, useClass: base_response_options_1.BaseResponseOptions },
+    { provide: jsonp_backend_1.JSONPBackend, useClass: jsonp_backend_1.JSONPBackend_ },
 ];
+function jsonpFactory(jsonpBackend, requestOptions) {
+    return new http_1.Jsonp(jsonpBackend, requestOptions);
+}
 /**
  * See {@link JSONP_PROVIDERS} instead.
  *

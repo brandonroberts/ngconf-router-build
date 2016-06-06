@@ -1,9 +1,9 @@
 "use strict";
-var core_1 = require('@angular/core');
-var lang_1 = require('../../src/facade/lang');
-var async_1 = require('../../src/facade/async');
-var exceptions_1 = require('../../src/facade/exceptions');
-var collection_1 = require('../../src/facade/collection');
+var core_private_1 = require('../../core_private');
+var lang_1 = require('../facade/lang');
+var async_1 = require('../facade/async');
+var exceptions_1 = require('../facade/exceptions');
+var collection_1 = require('../facade/collection');
 var o = require('./output_ast');
 var dart_emitter_1 = require('./dart_emitter');
 var ts_emitter_1 = require('./ts_emitter');
@@ -173,11 +173,11 @@ var StatementInterpreter = (function () {
                 di.props.set(expr.name, value);
             }
             else {
-                core_1.reflector.setter(expr.name)(receiver, value);
+                core_private_1.reflector.setter(expr.name)(receiver, value);
             }
         }
         else {
-            core_1.reflector.setter(expr.name)(receiver, value);
+            core_private_1.reflector.setter(expr.name)(receiver, value);
         }
         return value;
     };
@@ -211,11 +211,11 @@ var StatementInterpreter = (function () {
                 result = lang_1.FunctionWrapper.apply(di.methods.get(expr.name), args);
             }
             else {
-                result = core_1.reflector.method(expr.name)(receiver, args);
+                result = core_private_1.reflector.method(expr.name)(receiver, args);
             }
         }
         else {
-            result = core_1.reflector.method(expr.name)(receiver, args);
+            result = core_private_1.reflector.method(expr.name)(receiver, args);
         }
         return result;
     };
@@ -275,7 +275,7 @@ var StatementInterpreter = (function () {
             return clazz.instantiate(args);
         }
         else {
-            return lang_1.FunctionWrapper.apply(core_1.reflector.factory(clazz), args);
+            return lang_1.FunctionWrapper.apply(core_private_1.reflector.factory(clazz), args);
         }
     };
     StatementInterpreter.prototype.visitLiteralExpr = function (ast, ctx) { return ast.value; };
@@ -358,11 +358,11 @@ var StatementInterpreter = (function () {
                 result = di.methods.get(ast.name);
             }
             else {
-                result = core_1.reflector.getter(ast.name)(receiver);
+                result = core_private_1.reflector.getter(ast.name)(receiver);
             }
         }
         else {
-            result = core_1.reflector.getter(ast.name)(receiver);
+            result = core_private_1.reflector.getter(ast.name)(receiver);
         }
         return result;
     };

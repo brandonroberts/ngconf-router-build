@@ -1,4 +1,4 @@
-import { OpaqueToken, ComponentRef, ComponentFactory, Injector, ViewMetadata, ElementRef, ChangeDetectorRef, NgZone, DebugElement } from '@angular/core';
+import { AnimationEntryMetadata, OpaqueToken, ComponentRef, ComponentFactory, Injector, ViewMetadata, ElementRef, ChangeDetectorRef, NgZone, DebugElement } from '@angular/core';
 import { Type } from '../src/facade/lang';
 /**
  * An abstract class for inserting the root test component element in a platform independent way.
@@ -91,6 +91,7 @@ export declare class TestComponentBuilder {
      * All the other properties of the component's {@link ViewMetadata} are preserved.
      */
     overrideTemplate(componentType: Type, template: string): TestComponentBuilder;
+    overrideAnimations(componentType: Type, animations: AnimationEntryMetadata[]): TestComponentBuilder;
     /**
      * Overrides a component's {@link ViewMetadata}.
      */

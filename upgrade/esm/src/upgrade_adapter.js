@@ -1,12 +1,11 @@
-import { provide, ApplicationRef, ComponentResolver, NgZone, ReflectiveInjector, Testability } from '@angular/core';
-import { browserPlatform } from '@angular/platform-browser';
-import { BROWSER_APP_PROVIDERS } from '@angular/platform-browser';
-import { getComponentInfo } from './metadata';
-import { onError, controllerKey } from './util';
-import { NG1_COMPILE, NG1_INJECTOR, NG1_PARSE, NG1_ROOT_SCOPE, NG1_TESTABILITY, NG2_COMPILER, NG2_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG2_ZONE, REQUIRE_INJECTOR } from './constants';
-import { DowngradeNg2ComponentAdapter } from './downgrade_ng2_adapter';
-import { UpgradeNg1ComponentAdapterBuilder } from './upgrade_ng1_adapter';
-import * as angular from './angular_js';
+import { ApplicationRef, ComponentResolver, NgZone, ReflectiveInjector, Testability } from "@angular/core";
+import { browserPlatform, BROWSER_APP_PROVIDERS, BROWSER_APP_COMPILER_PROVIDERS } from "@angular/platform-browser";
+import { getComponentInfo } from "./metadata";
+import { onError, controllerKey } from "./util";
+import { NG1_COMPILE, NG1_INJECTOR, NG1_PARSE, NG1_ROOT_SCOPE, NG1_TESTABILITY, NG2_COMPILER, NG2_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG2_ZONE, REQUIRE_INJECTOR } from "./constants";
+import { DowngradeNg2ComponentAdapter } from "./downgrade_ng2_adapter";
+import { UpgradeNg1ComponentAdapterBuilder } from "./upgrade_ng1_adapter";
+import * as angular from "./angular_js";
 var upgradeCount = 0;
 /**
  * Use `UpgradeAdapter` to allow AngularJS v1 and Angular v2 to coexist in a single application.
@@ -267,8 +266,9 @@ export class UpgradeAdapter {
         var platformRef = browserPlatform();
         var applicationRef = ReflectiveInjector.resolveAndCreate([
             BROWSER_APP_PROVIDERS,
-            provide(NG1_INJECTOR, { useFactory: () => ng1Injector }),
-            provide(NG1_COMPILE, { useFactory: () => ng1Injector.get(NG1_COMPILE) }),
+            BROWSER_APP_COMPILER_PROVIDERS,
+            { provide: NG1_INJECTOR, useFactory: () => ng1Injector },
+            { provide: NG1_COMPILE, useFactory: () => ng1Injector.get(NG1_COMPILE) },
             this.providers
         ], platformRef.injector)
             .get(ApplicationRef);
@@ -289,7 +289,8 @@ export class UpgradeAdapter {
             .value(NG2_COMPONENT_FACTORY_REF_MAP, componentFactoryRefMap)
             .config([
             '$provide',
-                (provide) => {
+            '$injector',
+                (provide, ng1Injector) => {
                 provide.decorator(NG1_ROOT_SCOPE, [
                     '$delegate',
                     function (rootScopeDelegate) {
@@ -304,26 +305,28 @@ export class UpgradeAdapter {
                         return rootScope = rootScopeDelegate;
                     }
                 ]);
-                provide.decorator(NG1_TESTABILITY, [
-                    '$delegate',
-                    function (testabilityDelegate) {
-                        var ng2Testability = injector.get(Testability);
-                        var origonalWhenStable = testabilityDelegate.whenStable;
-                        var newWhenStable = (callback) => {
-                            var whenStableContext = this;
-                            origonalWhenStable.call(this, function () {
-                                if (ng2Testability.isStable()) {
-                                    callback.apply(this, arguments);
-                                }
-                                else {
-                                    ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
-                                }
-                            });
-                        };
-                        testabilityDelegate.whenStable = newWhenStable;
-                        return testabilityDelegate;
-                    }
-                ]);
+                if (ng1Injector.has(NG1_TESTABILITY)) {
+                    provide.decorator(NG1_TESTABILITY, [
+                        '$delegate',
+                        function (testabilityDelegate) {
+                            var ng2Testability = injector.get(Testability);
+                            var origonalWhenStable = testabilityDelegate.whenStable;
+                            var newWhenStable = (callback) => {
+                                var whenStableContext = this;
+                                origonalWhenStable.call(this, function () {
+                                    if (ng2Testability.isStable()) {
+                                        callback.apply(this, arguments);
+                                    }
+                                    else {
+                                        ng2Testability.whenStable(newWhenStable.bind(whenStableContext, callback));
+                                    }
+                                });
+                            };
+                            testabilityDelegate.whenStable = newWhenStable;
+                            return testabilityDelegate;
+                        }
+                    ]);
+                }
             }
         ]);
         ng1compilePromise = new Promise((resolve, reject) => {
@@ -332,7 +335,7 @@ export class UpgradeAdapter {
                 '$rootScope',
                     (injector, rootScope) => {
                     ng1Injector = injector;
-                    ngZone.onMicrotaskEmpty.subscribe({ next: (_) => ngZone.runOutsideAngular(() => rootScope.$apply()) });
+                    ngZone.onMicrotaskEmpty.subscribe({ next: (_) => ngZone.runOutsideAngular(() => rootScope.$applyAsync()) });
                     UpgradeNg1ComponentAdapterBuilder.resolve(this.downgradedComponents, injector)
                         .then(resolve, reject);
                 }
@@ -446,10 +449,11 @@ export class UpgradeAdapter {
      */
     upgradeNg1Provider(name, options) {
         var token = options && options.asToken || name;
-        this.providers.push(provide(token, {
+        this.providers.push({
+            provide: token,
             useFactory: (ng1Injector) => ng1Injector.get(name),
             deps: [NG1_INJECTOR]
-        }));
+        });
     }
     /**
      * Allows Angular v2 service to be accessible from AngularJS v1.
@@ -497,15 +501,15 @@ export class UpgradeAdapter {
 function ng1ComponentDirective(info, idPrefix) {
     directiveFactory.$inject = [NG1_INJECTOR, NG2_COMPONENT_FACTORY_REF_MAP, NG1_PARSE];
     function directiveFactory(ng1Injector, componentFactoryRefMap, parse) {
-        var componentFactory = componentFactoryRefMap[info.selector];
-        if (!componentFactory)
-            throw new Error('Expecting ComponentFactory for: ' + info.selector);
         var idCount = 0;
         return {
             restrict: 'E',
             require: REQUIRE_INJECTOR,
             link: {
                 post: (scope, element, attrs, parentInjector, transclude) => {
+                    var componentFactory = componentFactoryRefMap[info.selector];
+                    if (!componentFactory)
+                        throw new Error('Expecting ComponentFactory for: ' + info.selector);
                     var domElement = element[0];
                     if (parentInjector === null) {
                         parentInjector = ng1Injector.get(NG2_INJECTOR);

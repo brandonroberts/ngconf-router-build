@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v$$ANGULAR_VERSION$$
+ * @license AngularJS v2.0.0-rc.1
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -376,6 +376,9 @@ var __extends = (this && this.__extends) || function (d, b) {
     })();
     var DomAdapter = _angular_platformBrowser.__platform_browser_private__.DomAdapter;
     var setRootDomAdapter = _angular_platformBrowser.__platform_browser_private__.setRootDomAdapter;
+    /**
+     * @stable
+     */
     var BaseException = (function (_super) {
         __extends(BaseException, _super);
         function BaseException(message) {
@@ -946,6 +949,7 @@ var __extends = (this && this.__extends) || function (d, b) {
         Parse5DomAdapter.prototype.setGlobalVar = function (path, value) { setValueOnPath(_global, path, value); };
         Parse5DomAdapter.prototype.requestAnimationFrame = function (callback) { return setTimeout(callback, 0); };
         Parse5DomAdapter.prototype.cancelAnimationFrame = function (id) { clearTimeout(id); };
+        Parse5DomAdapter.prototype.supportsWebAnimation = function () { return false; };
         Parse5DomAdapter.prototype.performanceNow = function () { return DateWrapper.toMillis(DateWrapper.now()); };
         Parse5DomAdapter.prototype.getAnimationPrefix = function () { return ''; };
         Parse5DomAdapter.prototype.getTransitionEnd = function () { return 'transitionend'; };
@@ -954,6 +958,10 @@ var __extends = (this && this.__extends) || function (d, b) {
         Parse5DomAdapter.prototype.parse = function (templateHtml) { throw new Error('not implemented'); };
         Parse5DomAdapter.prototype.invoke = function (el, methodName, args) { throw new Error('not implemented'); };
         Parse5DomAdapter.prototype.getEventKey = function (event) { throw new Error('not implemented'); };
+        Parse5DomAdapter.prototype.supportsCookies = function () { return false; };
+        Parse5DomAdapter.prototype.getCookie = function (name) { throw new Error('not implemented'); };
+        Parse5DomAdapter.prototype.setCookie = function (name, value) { throw new Error('not implemented'); };
+        Parse5DomAdapter.prototype.animate = function (element, keyframes, options) { throw new Error('not implemented'); };
         return Parse5DomAdapter;
     }(DomAdapter));
     // TODO: build a proper list, this one is all the keys of a HTMLInputElement

@@ -1,6 +1,6 @@
 import { Provider } from './provider';
 import { ResolvedReflectiveProvider } from './reflective_provider';
-import { Type } from '../../src/facade/lang';
+import { Type } from '../facade/lang';
 import { Injector } from './injector';
 export interface ReflectiveProtoInjectorStrategy {
     getProviderAtIndex(index: number): ResolvedReflectiveProvider;
@@ -202,6 +202,7 @@ export declare abstract class ReflectiveInjector implements Injector {
      * var injector = ReflectiveInjector.fromResolvedProviders(providers);
      * expect(injector.get(Car) instanceof Car).toBe(true);
      * ```
+     * @experimental
      */
     static fromResolvedProviders(providers: ResolvedReflectiveProvider[], parent?: Injector): ReflectiveInjector;
     /**

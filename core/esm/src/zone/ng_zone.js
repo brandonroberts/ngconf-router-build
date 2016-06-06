@@ -1,6 +1,6 @@
-import { EventEmitter } from '../../src/facade/async';
+import { EventEmitter } from '../facade/async';
 import { NgZoneImpl } from './ng_zone_impl';
-import { BaseException } from '../../src/facade/exceptions';
+import { BaseException } from '../facade/exceptions';
 export { NgZoneError } from './ng_zone_impl';
 /**
  * An injectable service for executing work inside or outside of the Angular zone.
@@ -72,6 +72,7 @@ export { NgZoneError } from './ng_zone_impl';
  *   }
  * }
  * ```
+ * @experimental
  */
 export class NgZone {
     constructor({ enableLongStackTrace = false }) {

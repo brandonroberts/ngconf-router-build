@@ -1,6 +1,6 @@
 import { Directive, Renderer, forwardRef, ElementRef, Input, Host, Optional } from '@angular/core';
-import { StringWrapper, isPrimitive, isPresent, isBlank, looseIdentical } from '../../../src/facade/lang';
-import { MapWrapper } from '../../../src/facade/collection';
+import { StringWrapper, isPrimitive, isPresent, isBlank, looseIdentical } from '../../facade/lang';
+import { MapWrapper } from '../../facade/collection';
 import { NG_VALUE_ACCESSOR } from './control_value_accessor';
 export const SELECT_VALUE_ACCESSOR = {
     provide: NG_VALUE_ACCESSOR,
@@ -34,7 +34,10 @@ export class SelectControlValueAccessor {
         this._renderer.setElementProperty(this._elementRef.nativeElement, 'value', valueString);
     }
     registerOnChange(fn) {
-        this.onChange = (valueString) => { fn(this._getOptionValue(valueString)); };
+        this.onChange = (valueString) => {
+            this.value = valueString;
+            fn(this._getOptionValue(valueString));
+        };
     }
     registerOnTouched(fn) { this.onTouched = fn; }
     /** @internal */
@@ -55,7 +58,7 @@ export class SelectControlValueAccessor {
 }
 SelectControlValueAccessor.decorators = [
     { type: Directive, args: [{
-                selector: 'select[ngControl],select[ngFormControl],select[ngModel]',
+                selector: 'select:not([multiple])[ngControl],select:not([multiple])[ngFormControl],select:not([multiple])[ngModel]',
                 host: { '(change)': 'onChange($event.target.value)', '(blur)': 'onTouched()' },
                 providers: [SELECT_VALUE_ACCESSOR]
             },] },

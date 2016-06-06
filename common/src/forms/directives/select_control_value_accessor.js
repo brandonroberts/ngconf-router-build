@@ -1,7 +1,7 @@
 "use strict";
 var core_1 = require('@angular/core');
-var lang_1 = require('../../../src/facade/lang');
-var collection_1 = require('../../../src/facade/collection');
+var lang_1 = require('../../facade/lang');
+var collection_1 = require('../../facade/collection');
 var control_value_accessor_1 = require('./control_value_accessor');
 exports.SELECT_VALUE_ACCESSOR = {
     provide: control_value_accessor_1.NG_VALUE_ACCESSOR,
@@ -36,7 +36,10 @@ var SelectControlValueAccessor = (function () {
     };
     SelectControlValueAccessor.prototype.registerOnChange = function (fn) {
         var _this = this;
-        this.onChange = function (valueString) { fn(_this._getOptionValue(valueString)); };
+        this.onChange = function (valueString) {
+            _this.value = valueString;
+            fn(_this._getOptionValue(valueString));
+        };
     };
     SelectControlValueAccessor.prototype.registerOnTouched = function (fn) { this.onTouched = fn; };
     /** @internal */
@@ -57,7 +60,7 @@ var SelectControlValueAccessor = (function () {
     };
     SelectControlValueAccessor.decorators = [
         { type: core_1.Directive, args: [{
-                    selector: 'select[ngControl],select[ngFormControl],select[ngModel]',
+                    selector: 'select:not([multiple])[ngControl],select:not([multiple])[ngFormControl],select:not([multiple])[ngModel]',
                     host: { '(change)': 'onChange($event.target.value)', '(blur)': 'onTouched()' },
                     providers: [exports.SELECT_VALUE_ACCESSOR]
                 },] },

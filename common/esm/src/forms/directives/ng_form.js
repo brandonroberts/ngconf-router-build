@@ -1,7 +1,7 @@
 import { Directive, forwardRef, Optional, Inject, Self } from '@angular/core';
-import { PromiseWrapper, ObservableWrapper, EventEmitter } from '../../../src/facade/async';
-import { ListWrapper } from '../../../src/facade/collection';
-import { isPresent } from '../../../src/facade/lang';
+import { PromiseWrapper, ObservableWrapper, EventEmitter } from '../../facade/async';
+import { ListWrapper } from '../../facade/collection';
+import { isPresent } from '../../facade/lang';
 import { ControlContainer } from './control_container';
 import { ControlGroup, Control } from '../model';
 import { setUpControl, setUpControlGroup, composeValidators, composeAsyncValidators } from './shared';
@@ -11,9 +11,11 @@ export const formDirectiveProvider =
 export class NgForm extends ControlContainer {
     constructor(validators, asyncValidators) {
         super();
+        this._submitted = false;
         this.ngSubmit = new EventEmitter();
         this.form = new ControlGroup({}, null, composeValidators(validators), composeAsyncValidators(asyncValidators));
     }
+    get submitted() { return this._submitted; }
     get formDirective() { return this; }
     get control() { return this.form; }
     get path() { return []; }
@@ -65,6 +67,7 @@ export class NgForm extends ControlContainer {
         });
     }
     onSubmit() {
+        this._submitted = true;
         ObservableWrapper.callEmit(this.ngSubmit, null);
         return false;
     }

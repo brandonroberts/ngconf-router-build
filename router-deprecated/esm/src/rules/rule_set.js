@@ -1,7 +1,7 @@
-import { isBlank, isPresent, isFunction } from '../../src/facade/lang';
-import { BaseException } from '../../src/facade/exceptions';
-import { Map } from '../../src/facade/collection';
-import { PromiseWrapper } from '../../src/facade/async';
+import { isBlank, isPresent, isFunction } from '../facade/lang';
+import { BaseException } from '../facade/exceptions';
+import { Map } from '../facade/collection';
+import { PromiseWrapper } from '../facade/async';
 import { RouteRule, RedirectRule, PathMatch } from './rules';
 import { Route, AsyncRoute, AuxRoute, Redirect } from '../route_config/route_config_impl';
 import { AsyncRouteHandler } from './route_handlers/async_route_handler';
@@ -131,7 +131,7 @@ export class RuleSet {
     _getRoutePath(config) {
         if (isPresent(config.regex)) {
             if (isFunction(config.serializer)) {
-                return new RegexRoutePath(config.regex, config.serializer);
+                return new RegexRoutePath(config.regex, config.serializer, config.regex_group_names);
             }
             else {
                 throw new BaseException(`Route provides a regex property, '${config.regex}', but no serializer property`);
